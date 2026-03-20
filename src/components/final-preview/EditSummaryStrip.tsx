@@ -16,7 +16,7 @@ const STEP_ICONS: Record<StepId, React.ElementType> = {
   background: Image,
   outfit: Shirt,
   'ai-prompt': Sparkles,
-  eraser: Eraser,
+  edits: Eraser,
 }
 
 export function EditSummaryStrip() {

@@ -1,14 +1,20 @@
 import { useState } from 'react'
 import { Image, Shirt, Eraser, ArrowRight, HelpCircle, X } from 'lucide-react'
-import { useJourneyStore } from '@/store/journey-store'
-import { CreditIndicator } from '@/components/common/CreditIndicator'
-import { ImagePreview } from '@/components/common/ImagePreview'
 import { Gem } from 'lucide-react'
+import { useJourneyStore } from '@/store/journey-store'
+import { ImagePreview } from '@/components/common/ImagePreview'
 
-export function EntrySheet() {
+export function EditModal() {
+  const showEditModal = useJourneyStore((s) => s.showEditModal)
+  const setShowEditModal = useJourneyStore((s) => s.setShowEditModal)
   const startJourney = useJourneyStore((s) => s.startJourney)
-  const originalImage = useJourneyStore((s) => s.originalImage)
+  const galleryImages = useJourneyStore((s) => s.galleryImages)
+  const selectedIndex = useJourneyStore((s) => s.selectedImageIndex)
   const [showHelp, setShowHelp] = useState(false)
+
+  if (!showEditModal) return null
+
+  const selectedImage = galleryImages[selectedIndex]
 
   const quickActions = [
     {
@@ -33,28 +39,42 @@ export function EntrySheet() {
 
   return (
     <>
-      <div className="min-h-screen bg-page flex items-center justify-center p-4 relative">
-        {/* Credit indicator — top right, clickable in future */}
-        <div className="absolute top-4 right-4">
-          <CreditIndicator />
-        </div>
+      {/* Blurred backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in-0 duration-200"
+        onClick={() => setShowEditModal(false)}
+      />
 
-        <div className="bg-surface rounded-[var(--radius-modal)] p-6 w-full max-w-[1024px] shadow-lg">
+      {/* Modal content */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="relative bg-surface rounded-[var(--radius-modal)] p-4 sm:p-6 w-full max-w-[880px] max-h-[90vh] overflow-y-auto shadow-xl pointer-events-auto animate-in fade-in-0 zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setShowEditModal(false)}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 text-ih-muted hover:text-primary-cta transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Image Preview — above options on mobile, right side on desktop */}
+            {/* Image Preview — right on desktop, above on mobile */}
             <div className="w-full md:w-1/2 md:order-2 flex items-center justify-center">
               <ImagePreview
-                src={originalImage}
+                src={selectedImage}
                 alt="Your headshot"
-                className="w-full max-w-[360px] aspect-[3/4] rounded-[var(--radius-preview)]"
+                className="w-full max-w-[200px] sm:max-w-[340px] aspect-[3/4] rounded-[var(--radius-preview)]"
               />
             </div>
 
-            {/* Options panel — below preview on mobile, left side on desktop */}
+            {/* Options panel */}
             <div className="w-full md:w-1/2 md:order-1">
               {/* Header */}
               <div className="flex items-center gap-2 mb-6">
-                <h1 className="text-[18px] font-medium">What do you want to edit?</h1>
+                <h2 className="text-[18px] font-medium">What do you want to edit?</h2>
                 <button
                   onClick={() => setShowHelp(true)}
                   className="text-ih-muted hover:text-primary-cta transition-colors"
@@ -111,7 +131,7 @@ export function EntrySheet() {
 
       {/* Help Modal */}
       {showHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
           <div className="bg-surface rounded-[var(--radius-modal)] p-6 w-full max-w-[440px] shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[16px] font-medium">How it works</h2>

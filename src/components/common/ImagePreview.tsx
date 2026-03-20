@@ -5,6 +5,7 @@ interface ImagePreviewProps {
   alt?: string
   overlayContent?: ReactNode
   className?: string
+  hideWatermark?: boolean
 }
 
 export function ImagePreview({
@@ -12,6 +13,7 @@ export function ImagePreview({
   alt = 'Headshot preview',
   overlayContent,
   className = '',
+  hideWatermark = false,
 }: ImagePreviewProps) {
   return (
     <div className={`relative rounded-[var(--radius-preview)] overflow-hidden bg-skeleton-base ${className}`}>
@@ -31,6 +33,15 @@ export function ImagePreview({
       </div>
       {overlayContent && (
         <div className="absolute inset-0">{overlayContent}</div>
+      )}
+      {!hideWatermark && (
+        <div className="absolute bottom-2 right-2 pointer-events-none select-none">
+          <img
+            src="/logo-horizontal.svg"
+            alt="Insta Headshots"
+            className="h-4 w-auto opacity-60 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+          />
+        </div>
       )}
     </div>
   )

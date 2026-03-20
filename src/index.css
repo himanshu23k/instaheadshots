@@ -163,6 +163,16 @@
   --sidebar-ring: #00C37A;
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,4 +1,4 @@
-export type StepId = 'face' | 'posture' | 'background' | 'outfit' | 'ai-prompt' | 'eraser'
+export type StepId = 'face' | 'posture' | 'background' | 'outfit' | 'ai-prompt' | 'edits'
 
 export type JourneyMode = 'full' | 'quick'
 

@@ -12,7 +12,7 @@ export function StepTrackerDesktop() {
 
   return (
     <div
-      className={`hidden lg:flex items-center gap-2 px-4 py-3 bg-surface border-b border-ih-border ${
+      className={`hidden items-center gap-2 px-4 py-3 bg-surface border-b border-ih-border ${
         isRendering ? 'opacity-40 pointer-events-none' : ''
       }`}
       role="list"

@@ -17,7 +17,7 @@ const STEP_ICONS: Record<StepId, React.ElementType> = {
   background: Image,
   outfit: Shirt,
   'ai-prompt': Sparkles,
-  eraser: Eraser,
+  edits: Eraser,
 }
 
 export function Sidebar() {
@@ -28,6 +28,10 @@ export function Sidebar() {
     (s) => s.renderStates[s.currentStep]?.status === 'loading'
   )
 
+  const completedCount = completedSteps.size
+  const totalSteps = STEPS.length
+  const progressPercent = Math.round((completedCount / totalSteps) * 100)
+
   return (
     <nav
       className={`w-[var(--sidebar-width)] bg-surface border-r border-ih-border p-4 hidden lg:block flex-shrink-0 ${
@@ -35,6 +39,22 @@ export function Sidebar() {
       }`}
       aria-label="Edit steps"
     >
+      {/* Progress indicator */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[12px] font-medium text-primary-cta">Progress</span>
+          <span className="text-[11px] text-ih-muted">
+            {completedCount}/{totalSteps}
+          </span>
+        </div>
+        <div className="w-full h-1.5 bg-ih-border rounded-full overflow-hidden">
+          <div
+            className="h-full bg-ih-accent rounded-full transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+
       <ul className="space-y-1" role="list">
         {STEPS.map((step) => {
           const Icon = STEP_ICONS[step.id]

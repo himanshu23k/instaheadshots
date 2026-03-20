@@ -6,7 +6,7 @@ export const STEPS: Step[] = [
   { id: 'background', label: 'Change Background', shortLabel: 'Background', cost: 1, dependsOn: ['face', 'posture'] },
   { id: 'outfit', label: 'Change Outfit', shortLabel: 'Outfit', cost: 1, dependsOn: ['face', 'posture'] },
   { id: 'ai-prompt', label: 'AI Refinement', shortLabel: 'AI Refine', cost: 1, dependsOn: ['face', 'posture', 'background', 'outfit'] },
-  { id: 'eraser', label: 'Magic Eraser', shortLabel: 'Erase', cost: 0, dependsOn: ['face', 'posture', 'background', 'outfit', 'ai-prompt'] },
+  { id: 'edits', label: 'Edits', shortLabel: 'Edits', cost: 0, dependsOn: ['face', 'posture', 'background', 'outfit', 'ai-prompt'] },
 ]
 
 export const STEP_MAP = Object.fromEntries(STEPS.map(s => [s.id, s])) as Record<StepId, Step>
@@ -46,7 +46,7 @@ export function requiresCascadeReset(currentStep: StepId, targetStep: StepId): b
 
   // Background and Outfit are independent of each other
   // Going back to Background doesn't reset Outfit and vice versa
-  // But going back to either resets AI Prompt and Eraser
+  // But going back to either resets AI Prompt and Edits
   if (targetStep === 'background' || targetStep === 'outfit') {
     // Only cascade if we're currently past AI Prompt or Eraser
     // and those steps have been applied

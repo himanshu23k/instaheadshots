@@ -1,6 +1,6 @@
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useJourneyStore } from '@/store/journey-store'
-import { EntrySheet } from '@/components/entry-sheet/EntrySheet'
+import { GalleryView } from '@/components/gallery/GalleryView'
 import { AppShell } from '@/components/layout/AppShell'
 import { FinalPreview } from '@/components/final-preview/FinalPreview'
 import { FaceSelection } from '@/components/steps/FaceSelection'
@@ -17,7 +17,7 @@ const STEP_COMPONENTS: Record<StepId, React.ComponentType> = {
   background: BackgroundSelection,
   outfit: OutfitSelection,
   'ai-prompt': AIPromptRefinement,
-  eraser: MagicEraser,
+  edits: MagicEraser,
 }
 
 function EditJourney() {
@@ -36,7 +36,7 @@ function App() {
 
   return (
     <TooltipProvider>
-      {view === 'entry' && <EntrySheet />}
+      {view === 'entry' && <GalleryView />}
       {view === 'journey' && <EditJourney />}
       {view === 'final' && <FinalPreview />}
     </TooltipProvider>

@@ -35,6 +35,11 @@ interface JourneyState {
   // Out of credits modal
   showOutOfCredits: boolean
 
+  // Gallery
+  galleryImages: string[]
+  selectedImageIndex: number
+  showEditModal: boolean
+
   // Actions
   setView: (view: AppView) => void
   startJourney: (mode: JourneyMode, startStep?: StepId) => void
@@ -50,6 +55,8 @@ interface JourneyState {
   showToast: (message: string) => void
   hideToast: () => void
   setShowOutOfCredits: (show: boolean) => void
+  setSelectedImageIndex: (index: number) => void
+  setShowEditModal: (show: boolean) => void
   reset: () => void
   finishJourney: () => void
   backToEditing: () => void
@@ -63,7 +70,7 @@ const initialSelections: Record<StepId, Selection | null> = {
   background: null,
   outfit: null,
   'ai-prompt': null,
-  eraser: null,
+  edits: null,
 }
 
 const initialRenderStates: Record<StepId, RenderState> = {
@@ -72,8 +79,12 @@ const initialRenderStates: Record<StepId, RenderState> = {
   background: { ...defaultRenderState },
   outfit: { ...defaultRenderState },
   'ai-prompt': { ...defaultRenderState },
-  eraser: { ...defaultRenderState },
+  edits: { ...defaultRenderState },
 }
+
+const defaultGalleryImages = Array.from({ length: 7 }, (_, i) =>
+  `/mock/faces/face-${String(i + 1).padStart(2, '0')}.jpg`
+)
 
 export const useJourneyStore = create<JourneyState>((set, get) => ({
   view: 'entry',
@@ -88,10 +99,14 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
   originalImage: '/mock/faces/face-01.jpg',
   toast: { message: '', visible: false },
   showOutOfCredits: false,
+  galleryImages: defaultGalleryImages,
+  selectedImageIndex: 0,
+  showEditModal: false,
 
   setView: (view) => set({ view }),
 
   startJourney: (mode, startStep) => {
+    const state = get()
     set({
       view: 'journey',
       journeyMode: mode,
@@ -101,6 +116,8 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       appliedTransformations: new Map(),
       renderStates: { ...initialRenderStates },
       pendingNavigation: null,
+      originalImage: state.galleryImages[state.selectedImageIndex],
+      showEditModal: false,
     })
   },
 
@@ -160,9 +177,9 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
     }
 
     // Background/Outfit are independent — going back to one doesn't reset the other
-    // But AI Prompt and Eraser depend on both
+    // But AI Prompt and Edits depend on both
     if (targetStep === 'background' || targetStep === 'outfit') {
-      const dependentSteps: StepId[] = ['ai-prompt', 'eraser']
+      const dependentSteps: StepId[] = ['ai-prompt', 'edits']
       const stepsToReset = dependentSteps.filter((s) => state.appliedTransformations.has(s))
 
       if (stepsToReset.length > 0) {
@@ -239,6 +256,10 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
 
   setShowOutOfCredits: (show) => set({ showOutOfCredits: show }),
 
+  setSelectedImageIndex: (index) => set({ selectedImageIndex: index }),
+
+  setShowEditModal: (show) => set({ showEditModal: show }),
+
   reset: () =>
     set({
       view: 'entry',
@@ -252,6 +273,7 @@ export const useJourneyStore = create<JourneyState>((set, get) => ({
       pendingNavigation: null,
       toast: { message: '', visible: false },
       showOutOfCredits: false,
+      showEditModal: false,
     }),
 
   finishJourney: () => set({ view: 'final' }),

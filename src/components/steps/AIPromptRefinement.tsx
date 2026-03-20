@@ -80,13 +80,13 @@ export function AIPromptRefinement() {
       applyTransformation('ai-prompt', selection)
       completeStep('ai-prompt')
       showToast('AI refinement applied')
-      setCurrentStep('eraser')
+      setCurrentStep('edits')
     }
   }, [prompt, canAfford, startRender, deduct, applyTransformation, completeStep, setCurrentStep, showToast, setSelection])
 
   const handleSkip = () => {
     completeStep('ai-prompt')
-    setCurrentStep('eraser')
+    setCurrentStep('edits')
   }
 
   const charCount = prompt.length

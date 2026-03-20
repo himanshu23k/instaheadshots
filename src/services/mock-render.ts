@@ -12,7 +12,7 @@ const STEP_DELAYS: Record<StepId, [number, number]> = {
   background: [1500, 3000],
   outfit: [2000, 3500],
   'ai-prompt': [2000, 4000],
-  eraser: [800, 1500],
+  edits: [800, 1500],
 }
 
 const FAILURE_RATE = 0.1 // 10% chance of failure
