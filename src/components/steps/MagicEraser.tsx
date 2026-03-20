@@ -72,6 +72,16 @@ export function MagicEraser() {
     setShowTip(false)
   }
 
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const touch = e.changedTouches[0]
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((touch.clientX - rect.left) / rect.width) * 100
+    const y = ((touch.clientY - rect.top) / rect.height) * 100
+    setErasePoints((prev) => [...prev, { x, y }])
+    setShowTip(false)
+  }
+
   const handleUndo = () => {
     setErasePoints((prev) => prev.slice(0, -1))
   }
@@ -87,8 +97,9 @@ export function MagicEraser() {
       previewAlt="Edits preview"
       previewOverlay={
         <div
-          className="absolute inset-0 cursor-crosshair"
+          className="absolute inset-0 cursor-crosshair touch-none"
           onClick={handlePreviewClick}
+          onTouchEnd={handleTouchEnd}
           style={{ filter: filterStyle }}
         >
           {erasePoints.map((point, i) => (
@@ -221,7 +232,7 @@ export function MagicEraser() {
         </div>
       </div>
 
-      <div className="mt-6 sticky bottom-0 bg-surface pt-2 pb-1">
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-6">
         <Button
           onClick={handleFinish}
           className="w-full bg-primary-cta text-white hover:bg-primary-cta-hover py-3"

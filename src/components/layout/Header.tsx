@@ -33,7 +33,7 @@ export function Header() {
         aria-label="Exit editing"
       >
         <ArrowLeft className="w-5 h-5" />
-        <span className="text-[14px] font-medium hidden sm:inline">Exit</span>
+        <span className="text-[14px] font-medium">Exit</span>
       </button>
 
       <h1 className="text-[18px] font-medium text-primary-cta">

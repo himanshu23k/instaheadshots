@@ -61,12 +61,12 @@ export function EditModal() {
           </button>
 
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Image Preview — right on desktop, above on mobile */}
-            <div className="w-full md:w-1/2 md:order-2 flex items-center justify-center">
+            {/* Image Preview — right on desktop, hidden on mobile */}
+            <div className="hidden md:flex w-full md:w-1/2 md:order-2 items-center justify-center">
               <ImagePreview
                 src={selectedImage}
                 alt="Your headshot"
-                className="w-full max-w-[200px] sm:max-w-[340px] aspect-[3/4] rounded-[var(--radius-preview)]"
+                className="w-full max-w-[340px] aspect-[3/4] rounded-[var(--radius-preview)]"
               />
             </div>
 

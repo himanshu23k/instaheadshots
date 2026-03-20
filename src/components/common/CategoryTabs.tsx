@@ -25,7 +25,7 @@ export function CategoryTabs({
   const showPlaceholder = actionActive && !tabs.includes(activeTab)
 
   return (
-    <div className="flex items-center gap-2 mb-4 sticky top-0 z-10 bg-surface py-2 -mt-2">
+    <div className="sticky top-0 z-10 bg-surface py-2 -mt-2 mb-4 flex items-center gap-2">
       <div className="relative flex-1">
         <select
           value={showPlaceholder ? '' : activeTab}

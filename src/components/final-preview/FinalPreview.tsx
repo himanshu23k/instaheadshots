@@ -60,7 +60,7 @@ export function FinalPreview() {
         </p>
 
         {/* Action buttons */}
-        <div className="flex gap-3 mt-6 w-full max-w-md">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full max-w-md">
           <Button
             variant="outline"
             className="flex-1 border-ih-border text-primary-cta"

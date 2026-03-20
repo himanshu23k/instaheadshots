@@ -126,7 +126,7 @@ export function BackgroundSelection() {
         onSelect={handleSelect}
       />
 
-      <div className="mt-4 sticky bottom-0 bg-surface pt-2 pb-1">
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-4">
         {renderState.status === 'failure' && (
           <p className="text-ih-danger text-[12px] mb-2" role="alert">
             {renderState.error}
