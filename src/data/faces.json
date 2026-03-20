@@ -1,0 +1,14 @@
+[
+  { "id": "face-01", "name": "Confident", "album": "All", "thumbnail": "/mock/faces/face-01.jpg" },
+  { "id": "face-02", "name": "Relaxed Smile", "album": "Social", "thumbnail": "/mock/faces/face-02.jpg" },
+  { "id": "face-03", "name": "Warm", "album": "Social", "thumbnail": "/mock/faces/face-03.jpg" },
+  { "id": "face-04", "name": "Professional", "album": "All", "thumbnail": "/mock/faces/face-04.jpg" },
+  { "id": "face-05", "name": "Friendly", "album": "Dating", "thumbnail": "/mock/faces/face-05.jpg" },
+  { "id": "face-06", "name": "Approachable", "album": "Dating", "thumbnail": "/mock/faces/face-06.jpg" },
+  { "id": "face-07", "name": "Neutral", "album": "All", "thumbnail": "/mock/faces/face-07.jpg" },
+  { "id": "face-08", "name": "Bright", "album": "Favorites", "thumbnail": "/mock/faces/face-08.jpg" },
+  { "id": "face-09", "name": "Serious", "album": "All", "thumbnail": "/mock/faces/face-09.jpg" },
+  { "id": "face-10", "name": "Natural", "album": "Social", "thumbnail": "/mock/faces/face-10.jpg" },
+  { "id": "face-11", "name": "Gentle", "album": "Dating", "thumbnail": "/mock/faces/face-11.jpg" },
+  { "id": "face-12", "name": "Bold", "album": "Favorites", "thumbnail": "/mock/faces/face-12.jpg" }
+]

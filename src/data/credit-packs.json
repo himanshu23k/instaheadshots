@@ -1,0 +1,5 @@
+[
+  { "id": "pack-10", "credits": 10, "price": "299" },
+  { "id": "pack-25", "credits": 25, "price": "599" },
+  { "id": "pack-50", "credits": 50, "price": "999" }
+]

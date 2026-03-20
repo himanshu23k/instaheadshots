@@ -1,0 +1,19 @@
+[
+  { "id": "bg-white-studio", "name": "White Studio", "category": "Studio", "thumbnail": "/mock/backgrounds/white-studio.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "bg-light-grey", "name": "Light Grey", "category": "Studio", "thumbnail": "/mock/backgrounds/light-grey.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "bg-grey-studio", "name": "Grey Studio", "category": "Studio", "thumbnail": "/mock/backgrounds/grey-studio.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "bg-dark-grey", "name": "Dark Grey", "category": "Studio", "thumbnail": "/mock/backgrounds/dark-grey.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "bg-black-studio", "name": "Black Studio", "category": "Studio", "thumbnail": "/mock/backgrounds/black-studio.jpg", "renderResult": "/mock/renders/render-05.jpg" },
+  { "id": "bg-canary", "name": "Canary Yellow", "category": "Studio", "thumbnail": "/mock/backgrounds/canary.jpg", "renderResult": "/mock/renders/render-06.jpg" },
+  { "id": "bg-navy", "name": "Navy Blue", "category": "Studio", "thumbnail": "/mock/backgrounds/navy.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "bg-pastel-blue", "name": "Pastel Blue", "category": "Studio", "thumbnail": "/mock/backgrounds/pastel-blue.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "bg-city-street", "name": "City Street", "category": "Outdoor", "thumbnail": "/mock/backgrounds/city-street.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "bg-rooftop", "name": "Rooftop Skyline", "category": "Outdoor", "thumbnail": "/mock/backgrounds/rooftop.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "bg-garden", "name": "Garden Path", "category": "Outdoor", "thumbnail": "/mock/backgrounds/garden.jpg", "renderResult": "/mock/renders/render-05.jpg" },
+  { "id": "bg-beach", "name": "Beachfront", "category": "Outdoor", "thumbnail": "/mock/backgrounds/beach.jpg", "renderResult": "/mock/renders/render-06.jpg" },
+  { "id": "bg-suburban", "name": "Suburban", "category": "Outdoor", "thumbnail": "/mock/backgrounds/suburban.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "bg-office", "name": "Modern Office", "category": "Location", "thumbnail": "/mock/backgrounds/office.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "bg-conference", "name": "Conference Room", "category": "Location", "thumbnail": "/mock/backgrounds/conference.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "bg-study", "name": "Home Study", "category": "Location", "thumbnail": "/mock/backgrounds/study.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "bg-cafe", "name": "Cafe Counter", "category": "Location", "thumbnail": "/mock/backgrounds/cafe.jpg", "renderResult": "/mock/renders/render-05.jpg" }
+]

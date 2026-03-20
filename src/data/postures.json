@@ -1,0 +1,8 @@
+[
+  { "id": "posture-straight", "name": "Straight On", "description": "Direct forward-facing, symmetrical", "thumbnail": "/mock/postures/straight.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "posture-3q-left", "name": "Three-Quarter Left", "description": "Body angled left, face forward", "thumbnail": "/mock/postures/3q-left.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "posture-3q-right", "name": "Three-Quarter Right", "description": "Body angled right, face forward", "thumbnail": "/mock/postures/3q-right.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "posture-lean", "name": "Relaxed Lean", "description": "Slight body lean forward", "thumbnail": "/mock/postures/lean.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "posture-profile-left", "name": "Profile Left", "description": "Side profile, left", "thumbnail": "/mock/postures/profile-left.jpg", "renderResult": "/mock/renders/render-05.jpg" },
+  { "id": "posture-profile-right", "name": "Profile Right", "description": "Side profile, right", "thumbnail": "/mock/postures/profile-right.jpg", "renderResult": "/mock/renders/render-06.jpg" }
+]

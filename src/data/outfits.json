@@ -1,0 +1,18 @@
+[
+  { "id": "outfit-black-blazer", "name": "Black Blazer + White Shirt", "category": "Formal", "thumbnail": "/mock/outfits/outfit-01.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "outfit-black-shirt", "name": "Black Shirt", "category": "Formal", "thumbnail": "/mock/outfits/outfit-02.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "outfit-black-suit", "name": "Black Suit With Tie", "category": "Formal", "thumbnail": "/mock/outfits/outfit-03.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "outfit-tuxedo", "name": "Black Tuxedo Jacket", "category": "Formal", "thumbnail": "/mock/outfits/outfit-04.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "outfit-cardigan", "name": "Black Cardigan Over White Tee", "category": "Business Casual", "thumbnail": "/mock/outfits/outfit-05.jpg", "renderResult": "/mock/renders/render-05.jpg" },
+  { "id": "outfit-blue-blazer", "name": "Navy Blazer", "category": "Business Casual", "thumbnail": "/mock/outfits/outfit-06.jpg", "renderResult": "/mock/renders/render-06.jpg" },
+  { "id": "outfit-grey-sweater", "name": "Grey Crewneck Sweater", "category": "Smart Casual", "thumbnail": "/mock/outfits/outfit-07.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "outfit-polo", "name": "White Polo", "category": "Smart Casual", "thumbnail": "/mock/outfits/outfit-08.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "outfit-henley", "name": "Grey Henley", "category": "Smart Casual", "thumbnail": "/mock/outfits/outfit-09.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "outfit-denim-jacket", "name": "Denim Jacket", "category": "Smart Casual", "thumbnail": "/mock/outfits/outfit-10.jpg", "renderResult": "/mock/renders/render-04.jpg" },
+  { "id": "outfit-linen-shirt", "name": "Linen Shirt", "category": "Business Casual", "thumbnail": "/mock/outfits/outfit-11.jpg", "renderResult": "/mock/renders/render-05.jpg" },
+  { "id": "outfit-kurta-white", "name": "White Kurta", "category": "Ethnic", "thumbnail": "/mock/outfits/outfit-12.jpg", "renderResult": "/mock/renders/render-06.jpg" },
+  { "id": "outfit-nehru", "name": "Nehru Jacket", "category": "Ethnic", "thumbnail": "/mock/outfits/outfit-13.jpg", "renderResult": "/mock/renders/render-01.jpg" },
+  { "id": "outfit-kurta-blue", "name": "Blue Kurta", "category": "Ethnic", "thumbnail": "/mock/outfits/outfit-14.jpg", "renderResult": "/mock/renders/render-02.jpg" },
+  { "id": "outfit-check-shirt", "name": "Check Shirt", "category": "Business Casual", "thumbnail": "/mock/outfits/outfit-15.jpg", "renderResult": "/mock/renders/render-03.jpg" },
+  { "id": "outfit-vest", "name": "Waistcoat + Shirt", "category": "Formal", "thumbnail": "/mock/outfits/outfit-16.jpg", "renderResult": "/mock/renders/render-04.jpg" }
+]

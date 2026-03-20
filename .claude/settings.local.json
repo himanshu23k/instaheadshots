@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(cp -r \"f:/Code/instaheadshots-temp/\"* \"f:/Code/instaheadshots-temp/\".* \"f:/Code/Instaheadshots/\")",
+      "Bash(rm -rf \"f:/Code/instaheadshots-temp\")"
+    ]
+  }
+}

@@ -1,0 +1,181 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* ── PRD Custom Colors (Section 2.1) ── */
+  --color-page: #F0EDE8;
+  --color-surface: #FFFFFF;
+  --color-primary-cta: #111111;
+  --color-primary-cta-hover: #2D2D2D;
+  --color-primary-cta-active: #444444;
+  --color-ih-accent: #00C37A;
+  --color-ih-accent-bg: #E6F9F1;
+  --color-ih-warning: #FFF3CD;
+  --color-ih-warning-text: #856404;
+  --color-ih-warning-border: #F0A500;
+  --color-ih-danger: #F04E6B;
+  --color-ih-danger-bg: #FDECEA;
+  --color-ih-danger-text: #8B1A1A;
+  --color-ih-muted: #6B6B6B;
+  --color-ih-border: #E0DDD8;
+  --color-ih-disabled: #C8C5C0;
+  --color-skeleton-base: #EBEBEB;
+  --color-skeleton-shimmer: #F5F5F5;
+  --color-toast-bg: rgba(30, 30, 30, 0.85);
+  --color-ih-overlay: rgba(0, 0, 0, 0.45);
+
+  /* ── PRD Border Radius (Section 2.3) ── */
+  --radius-preview: 12px;
+  --radius-card: 8px;
+  --radius-btn: 6px;
+  --radius-chip: 16px;
+  --radius-pill: 20px;
+  --radius-alert: 8px;
+  --radius-modal: 12px;
+  --radius-skeleton: 6px;
+
+  /* ── PRD Font Sizes (Section 2.2) ── */
+  --font-size-title: 22px;
+  --font-size-heading: 18px;
+  --font-size-body: 14px;
+  --font-size-caption: 12px;
+  --font-size-badge: 12px;
+
+  /* ── Layout ── */
+  --sidebar-width: 200px;
+
+  /* ── Custom Animations ── */
+  --animate-shimmer: shimmer 1.5s ease infinite;
+  --animate-spin-slow: spin 0.8s linear infinite;
+  --animate-crossfade: crossfade 0.3s ease;
+  --animate-scale-bounce: scale-bounce 0.25s ease;
+  --animate-fade-in: fade-in 0.2s ease;
+  --animate-fade-out: fade-out 0.2s ease;
+}
+
+/* Keyframes */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes crossfade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* shadcn theme inline vars (keep for component compatibility) */
+@theme inline {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Override shadcn root vars with PRD design tokens */
+:root {
+  --background: #F0EDE8;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0EDE8;
+  --secondary-foreground: #111111;
+  --muted: #F0EDE8;
+  --muted-foreground: #6B6B6B;
+  --accent: #00C37A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #F04E6B;
+  --border: #E0DDD8;
+  --input: #E0DDD8;
+  --ring: #00C37A;
+  --chart-1: #00C37A;
+  --chart-2: #111111;
+  --chart-3: #6B6B6B;
+  --chart-4: #E0DDD8;
+  --chart-5: #F0EDE8;
+  --radius: 0.375rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #6B6B6B;
+  --sidebar-primary: #00C37A;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E6F9F1;
+  --sidebar-accent-foreground: #00C37A;
+  --sidebar-border: #E0DDD8;
+  --sidebar-ring: #00C37A;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-size: var(--font-size-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    @apply font-sans;
+  }
+}
