@@ -26,7 +26,7 @@ export function PostureSelection() {
   const { renderState, startRender, cancelRender, showCancel } = useRender()
   const selectedId = selection?.optionId || DEFAULT_POSTURE
   const isNoChange = selectedId === DEFAULT_POSTURE
-  const { cost, isFree, canAfford, deduct } = useCredit('posture', isNoChange ? null : selectedId)
+  const { isFree, canAfford, deduct } = useCredit('posture', isNoChange ? null : selectedId)
 
   const [previewMode, setPreviewMode] = useState<'before' | 'after'>('after')
 

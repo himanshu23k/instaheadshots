@@ -32,7 +32,7 @@ export function BackgroundSelection() {
 
   const { renderState, startRender, cancelRender, showCancel } = useRender()
   const selectedId = selection?.optionId || null
-  const { cost, isFree, canAfford, deduct } = useCredit('background', selectedId)
+  const { isFree, canAfford, deduct } = useCredit('background', selectedId)
 
   const isCustom = activeTab === 'Custom'
   const allBackgrounds = isCustom

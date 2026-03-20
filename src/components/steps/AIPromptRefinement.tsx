@@ -29,7 +29,7 @@ export function AIPromptRefinement() {
 
   const { renderState, startRender, cancelRender, showCancel } = useRender()
   const optionId = prompt.trim() ? `prompt-${prompt.trim().slice(0, 20)}` : null
-  const { cost, isFree, canAfford, deduct } = useCredit('ai-prompt', optionId)
+  const { isFree, canAfford, deduct } = useCredit('ai-prompt', optionId)
 
   const previewSrc = applied
     ? previewMode === 'before'

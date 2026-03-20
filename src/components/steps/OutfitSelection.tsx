@@ -29,7 +29,7 @@ export function OutfitSelection() {
 
   const { renderState, startRender, cancelRender, showCancel } = useRender()
   const selectedId = selection?.optionId || null
-  const { cost, isFree, canAfford, deduct } = useCredit('outfit', selectedId)
+  const { isFree, canAfford, deduct } = useCredit('outfit', selectedId)
 
   const isShopTab = activeTab === 'Shop'
   const filteredOutfits = activeTab === 'All'
