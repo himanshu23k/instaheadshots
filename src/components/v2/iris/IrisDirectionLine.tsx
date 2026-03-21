@@ -102,7 +102,7 @@ export function IrisDirectionLine() {
     28
   )
 
-  const [irisCollapsed, setIrisCollapsed] = useState(false)
+  const [irisCollapsed, setIrisCollapsed] = useState(true)
 
   const [showReaction, setShowReaction] = useState(false)
   const [reactionText, setReactionText] = useState('')
