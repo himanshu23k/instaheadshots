@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, type CSSProperties } from 'react'
 import { useStudioStore } from '@/store/studio-store'
 import { useIris } from '@/hooks/use-iris'
 import { useSwipe } from '@/hooks/use-swipe'
@@ -21,8 +21,10 @@ import { PickYourShot } from './versions/PickYourShot'
 import { FinalShot } from './FinalShot'
 import { LooksGallery } from './looks/LooksGallery'
 import { IrisDirectionLine } from './iris/IrisDirectionLine'
-import { AskIrisPopover } from './iris/AskIrisPopover'
 import type { StationId } from '@/types/studio'
+import { cn } from '@/lib/utils'
+
+const STAGGER_STEP_MS = 80
 
 const STATION_COMPONENTS: Record<StationId, React.ComponentType> = {
   look: LookStation,
@@ -42,11 +44,11 @@ export function StudioShell() {
   const setIrisReaction = useStudioStore((s) => s.setIrisReaction)
   const setIrisSuggestions = useStudioStore((s) => s.setIrisSuggestions)
   const [showLooks, setShowLooks] = useState(false)
-  const [askIrisOpen, setAskIrisOpen] = useState(false)
-  const [irisOverride, setIrisOverride] = useState<string | null>(null)
+  const [staggerFromGreeting, setStaggerFromGreeting] = useState(false)
 
   const { getReaction, getNudgeSuggestions } = useIris()
   const prevRevealPhase = useRef(revealPhase)
+  const prevPhase = useRef(phase)
   const setActiveStation = useStudioStore((s) => s.setActiveStation)
 
   // Swipe to switch stations on mobile
@@ -69,19 +71,6 @@ export function StudioShell() {
     enabled: revealPhase === 'idle' || revealPhase === 'complete',
   })
 
-  // Clear Iris override when user makes new selections
-  const selections = useStudioStore((s) => s.stationSelections)
-  useEffect(() => {
-    if (irisOverride) setIrisOverride(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selections.look.faceId,
-    selections.look.postureId,
-    selections.setting.backgroundId,
-    selections.style.outfitId,
-    selections.refine.prompt,
-  ])
-
   // Trigger Iris reaction + suggestions after reveal completes
   useEffect(() => {
     if (prevRevealPhase.current !== 'complete' && revealPhase === 'complete' && revealStation) {
@@ -98,7 +87,23 @@ export function StudioShell() {
     prevRevealPhase.current = revealPhase
   }, [revealPhase, revealStation, getReaction, getNudgeSuggestions, setIrisReaction, setIrisSuggestions])
 
-  if (phase === 'greeting') return <StudioGreeting />
+  // Must run before paint: otherwise one frame shows the full UI at opacity 1 (flash), then stagger applies.
+  useLayoutEffect(() => {
+    if (prevPhase.current === 'greeting' && phase === 'creating') {
+      setStaggerFromGreeting(true)
+    }
+    prevPhase.current = phase
+  }, [phase])
+
+  const staggerStyle = (step: number): CSSProperties | undefined => {
+    if (!staggerFromGreeting) return undefined
+    return {
+      animation: `studio-stagger-in 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${step * STAGGER_STEP_MS}ms forwards`,
+      animationFillMode: 'both',
+      backfaceVisibility: 'hidden',
+    }
+  }
+
   if (phase === 'picking') return <PickYourShot />
   if (phase === 'done') return <FinalShot />
 
@@ -112,43 +117,22 @@ export function StudioShell() {
     }
   }
 
-  const handleIrisMessage = (msg: string) => {
-    setIrisOverride(msg)
-  }
-
   // Iris section (shared between mobile + desktop panel)
-  const irisSection = (
-    <IrisDirectionLine
-      overrideMessage={irisOverride}
-      rightSlot={
-        <button
-          onClick={() => setAskIrisOpen(!askIrisOpen)}
-          className="whitespace-nowrap text-[11px] cursor-pointer transition-all hover:bg-ih-border/30 active:scale-[0.96]"
-          style={{
-            border: '1px solid #E0DDD8',
-            borderRadius: '12px',
-            padding: '4px 10px',
-            color: '#6B6B6B',
-            background: 'transparent',
-          }}
-        >
-          Ask Iris
-        </button>
-      }
-    />
-  )
+  const irisSection = <IrisDirectionLine />
 
-  return (
+  const studioMain = (
     <div
       className="h-screen flex flex-col transition-colors duration-400 overflow-hidden"
       style={{ backgroundColor: ambientTint }}
     >
-      <StudioHeader />
+      <div className="w-full shrink-0" style={staggerStyle(0)}>
+        <StudioHeader />
+      </div>
 
       {/* ─── Mobile (<768px): stacked layout ─── */}
       <div className="flex-1 flex flex-col min-h-0 md:hidden">
         {/* Image — clean canvas, no overlays except reveal */}
-        <div ref={swipeRef} className="flex-[3] min-h-0 flex flex-col">
+        <div ref={swipeRef} className="flex-[3] min-h-0 flex flex-col" style={staggerStyle(1)}>
           <StudioImage
             overlay={<><RevealOverlay /><VariationsGrid /></>}
             topRight={<VersionBoard />}
@@ -156,25 +140,24 @@ export function StudioShell() {
           />
         </div>
 
-        <StudioTabBar
-          showLooks={showLooks}
-          onLooksToggle={() => setShowLooks(!showLooks)}
-          onDone={handleDone}
-        />
+        <div style={staggerStyle(2)}>
+          <StudioTabBar
+            showLooks={showLooks}
+            onLooksToggle={() => setShowLooks(!showLooks)}
+            onDone={handleDone}
+          />
+        </div>
 
         {/* Tray — Iris section at top, then station content */}
         <div className="flex-[2] min-h-0 flex flex-col">
-          <div className="relative shrink-0">
-            {irisSection}
-            <AskIrisPopover
-              open={askIrisOpen}
-              onClose={() => setAskIrisOpen(false)}
-              onIrisMessage={handleIrisMessage}
-            />
+          <div className="relative shrink-0" style={staggerStyle(3)}>
+            <div className="relative pl-4 pr-5 pt-2">{irisSection}</div>
           </div>
-          <StationTray station={showLooks ? undefined : activeStation}>
-            {showLooks ? <LooksGallery /> : <StationComponent />}
-          </StationTray>
+          <div className="min-h-0 flex flex-1 flex-col" style={staggerStyle(4)}>
+            <StationTray station={showLooks ? undefined : activeStation}>
+              {showLooks ? <LooksGallery /> : <StationComponent />}
+            </StationTray>
+          </div>
         </div>
       </div>
 
@@ -188,18 +171,14 @@ export function StudioShell() {
             borderRadius: '12px',
             margin: '16px',
             height: 'calc(100vh - 48px - 32px)',
+            ...staggerStyle(1),
           }}
         >
           <StudioSidebar onDone={handleDone} />
-          <div className="w-[280px] lg:w-[340px] xl:w-[380px] flex flex-col min-h-0 bg-[#FFFFFF]">
+          <div className="relative z-10 w-[280px] lg:w-[340px] xl:w-[380px] flex flex-col min-h-0 bg-[#FFFFFF]">
             {/* Iris section — fixed at top of panel */}
             <div className="relative shrink-0">
-              {irisSection}
-              <AskIrisPopover
-                open={askIrisOpen}
-                onClose={() => setAskIrisOpen(false)}
-                onIrisMessage={handleIrisMessage}
-              />
+              <div className="relative pl-4 pr-5 pt-2">{irisSection}</div>
             </div>
             {/* Station content */}
             <StationTray station={showLooks ? undefined : activeStation}>
@@ -211,7 +190,12 @@ export function StudioShell() {
         {/* Right — Clean image canvas */}
         <div
           className="flex-1 flex flex-col items-center justify-center min-h-0"
-          style={{ border: 'none', boxShadow: 'none', outline: 'none' }}
+          style={{
+            border: 'none',
+            boxShadow: 'none',
+            outline: 'none',
+            ...staggerStyle(2),
+          }}
         >
           <StudioImage
             overlay={<><RevealOverlay /><VariationsGrid /></>}
@@ -220,6 +204,22 @@ export function StudioShell() {
           />
         </div>
       </div>
+    </div>
+  )
+
+  return (
+    <div className="relative min-h-screen w-full">
+      <div
+        className={cn(
+          'relative z-0 min-h-screen w-full',
+          // No CSS transition here: it fought the stagger (filter + child transforms = flicker).
+          phase === 'greeting' && 'brightness-[0.9] saturate-[0.92]',
+          phase === 'creating' && 'brightness-100 saturate-100'
+        )}
+      >
+        {studioMain}
+      </div>
+      {phase === 'greeting' && <StudioGreeting />}
     </div>
   )
 }

@@ -67,6 +67,9 @@ export interface ProductInfo {
   price: string
   image: string
   variants: ProductVariant[]
+  /** PDP / carousel images (e.g. from link scrape mock) */
+  carouselImages?: string[]
+  sourceUrl?: string
 }
 
 export interface ProductVariant {

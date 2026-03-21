@@ -81,8 +81,11 @@ export async function simulateRender(
 export async function simulateStudioRender(
   station: StationId,
   _optionId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  /** User goal text from Iris — included when applying (e.g. Look station) */
+  userPrompt?: string
 ): Promise<StudioRenderResult> {
+  void userPrompt
   const [min, max] = STATION_DELAYS[station]
   const delay = randomDelay(min, max)
 
@@ -196,7 +199,27 @@ export async function simulateLookRender(
   })
 }
 
-// ── v1 product fetch (unchanged) ──────────────────────────────
+// Mock carousel assets (subset guaranteed in repo; duplicates ok for demo)
+const MOCK_CAROUSEL_IMAGES = [
+  '/mock/outfits/outfit-05.jpg',
+  '/mock/outfits/outfit-12.jpg',
+  '/mock/outfits/outfit-15.jpg',
+  '/mock/outfits/outfit-05.jpg',
+  '/mock/outfits/outfit-12.jpg',
+]
+
+function isLikelyProductUrl(url: string): boolean {
+  const t = url.trim()
+  if (!t) return false
+  try {
+    const u = new URL(t)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+// ── v1 product fetch (mock: carousel images from “page”) ───────
 export async function simulateFetchProduct(
   url: string,
   signal?: AbortSignal
@@ -208,18 +231,23 @@ export async function simulateFetchProduct(
     price: string
     image: string
     variants: Array<{ id: string; color: string; hex: string }>
+    carouselImages?: string[]
+    sourceUrl?: string
   }
   error?: string
 }> {
-  const isMyntra = url.includes('myntra.com')
-  const isAjio = url.includes('ajio.com')
-
-  if (!isMyntra && !isAjio) {
+  if (!isLikelyProductUrl(url)) {
     return {
       success: false,
-      error: 'We support Myntra and Ajio links only.',
+      error: 'Paste a valid http(s) product link.',
     }
   }
+
+  const lower = url.toLowerCase()
+  const isMyntra = lower.includes('myntra.com')
+  const isAjio = lower.includes('ajio.com')
+  const isAmazon = lower.includes('amazon.') || lower.includes('amzn.')
+  const isShopify = lower.includes('shopify.com') || lower.includes('myshopify.com') || lower.includes('cdn.shopify')
 
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -228,13 +256,29 @@ export async function simulateFetchProduct(
         return
       }
 
+      const brand = isMyntra
+        ? 'H&M'
+        : isAjio
+          ? 'Allen Solly'
+          : isAmazon
+            ? 'Amazon seller'
+            : isShopify
+              ? 'Shopify store'
+              : 'Store'
+
+      const price = isMyntra ? '1,499' : isAjio ? '1,299' : '2,499'
+
+      const carouselImages = [...MOCK_CAROUSEL_IMAGES]
+
       resolve({
         success: true,
         product: {
           name: 'Classic Fit Cotton Oxford Shirt',
-          brand: isMyntra ? 'H&M' : 'Allen Solly',
-          price: isMyntra ? '1,499' : '1,299',
-          image: '/mock/outfits/outfit-01.jpg',
+          brand,
+          price,
+          image: carouselImages[0]!,
+          carouselImages,
+          sourceUrl: url.trim(),
           variants: [
             { id: 'v1', color: 'White', hex: '#FFFFFF' },
             { id: 'v2', color: 'Light Blue', hex: '#ADD8E6' },
@@ -243,7 +287,7 @@ export async function simulateFetchProduct(
           ],
         },
       })
-    }, 2000)
+    }, 1800)
 
     if (signal) {
       signal.addEventListener('abort', () => {

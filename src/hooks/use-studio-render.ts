@@ -17,8 +17,17 @@ export function useStudioRender() {
     async (station: StationId, optionId: string): Promise<boolean> => {
       // Check credits
       const creditStore = useCreditStore.getState()
-      const isFree = creditStore.isTransformationFree(station, optionId)
-      if (!isFree && !creditStore.canAfford(1)) {
+      const storeSnapshot = useStudioStore.getState()
+      const refinePrompt =
+        station === 'refine'
+          ? storeSnapshot.stationSelections.refine.prompt.trim()
+          : ''
+      /** Refine: slider-only applies (no Iris prompt text) never consume credits */
+      const isRefineManualOnly = station === 'refine' && refinePrompt.length === 0
+      const isFreeByHistory = creditStore.isTransformationFree(station, optionId)
+      const effectiveFree = isFreeByHistory || isRefineManualOnly
+
+      if (!effectiveFree && !creditStore.canAfford(1)) {
         setError('Not enough credits')
         return false
       }
@@ -32,17 +41,33 @@ export function useStudioRender() {
       startReveal(station)
 
       try {
+        const store = useStudioStore.getState()
+        const userPrompt = store.irisGoalByStation[station].trim() || undefined
         const result = await simulateStudioRender(
           station,
           optionId,
-          abortRef.current.signal
+          abortRef.current.signal,
+          userPrompt
         )
 
         if (result.success) {
-          // Deduct credit
-          if (!isFree) {
+          // Decide charge before clearing Iris text; refine uses station prompt field (not full Iris string)
+          const latest = useStudioStore.getState()
+          const refinePromptAtApply =
+            station === 'refine'
+              ? latest.stationSelections.refine.prompt.trim()
+              : ''
+          const isRefineManualOnlyAtApply =
+            station === 'refine' && refinePromptAtApply.length === 0
+          const shouldDeductCredit =
+            !creditStore.isTransformationFree(station, optionId) &&
+            !isRefineManualOnlyAtApply
+
+          if (shouldDeductCredit) {
             creditStore.deductCredit(station, optionId)
           }
+
+          latest.clearIrisGoalForStation(station)
 
           // Start reveal animation
           useStudioStore.getState().startReveal(station, 'single')

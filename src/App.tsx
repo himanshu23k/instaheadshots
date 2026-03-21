@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useJourneyStore } from '@/store/journey-store'
 import { GalleryView } from '@/components/gallery/GalleryView'
+import { EditModal } from '@/components/gallery/EditModal'
 import { AppShell } from '@/components/layout/AppShell'
 import { FinalPreview } from '@/components/final-preview/FinalPreview'
 import { FaceSelection } from '@/components/steps/FaceSelection'
@@ -39,7 +40,12 @@ function V1App() {
 
   return (
     <>
-      {view === 'entry' && <GalleryView />}
+      {view === 'entry' && (
+        <>
+          <GalleryView />
+          <EditModal />
+        </>
+      )}
       {view === 'journey' && <EditJourney />}
       {view === 'final' && <FinalPreview />}
     </>

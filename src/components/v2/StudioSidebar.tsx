@@ -25,7 +25,7 @@ export function StudioSidebar({ onDone }: StudioSidebarProps) {
   return (
     <nav
       className={cn(
-        'w-[72px] shrink-0 flex flex-col z-20 relative pt-3 pb-3 h-full',
+        'w-[72px] shrink-0 flex flex-col relative z-0 pt-3 pb-3 h-full',
         isLocked && 'opacity-50 pointer-events-none'
       )}
       style={{ background: '#F8F8F6', borderRight: '1px solid #E0DDD8' }}
@@ -47,18 +47,13 @@ export function StudioSidebar({ onDone }: StudioSidebarProps) {
             className={cn(
               'relative flex flex-col items-center justify-center gap-1 py-3.5 mx-2 transition-colors',
               isActive
-                ? 'bg-[#FFFFFF] text-foreground'
-                : 'text-ih-muted hover:text-foreground'
+                ? 'bg-[#FFFFFF] text-foreground border border-[#E0DDD8] border-r-0 rounded-tl-lg rounded-bl-lg'
+                : 'text-ih-muted hover:text-foreground rounded-lg'
             )}
             style={isActive ? {
               marginRight: '-9px',
               paddingRight: '8px',
-              borderRadius: 0,
-              position: 'relative' as const,
-              zIndex: 2,
-            } : {
-              borderRadius: '8px',
-            }}
+            } : undefined}
           >
             <Icon className="w-5 h-5" />
             <span className="text-[10px] font-medium leading-none">

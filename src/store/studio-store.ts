@@ -35,6 +35,13 @@ const DEFAULT_SELECTIONS: StationSelections = {
   },
 }
 
+const EMPTY_IRIS_GOALS_BY_STATION: Record<StationId, string> = {
+  look: '',
+  setting: '',
+  style: '',
+  refine: '',
+}
+
 interface StudioState {
   // Lifecycle
   phase: StudioPhase
@@ -73,6 +80,8 @@ interface StudioState {
   irisSuggestions: IrisSuggestion[]
   irisReaction: string | null
   irisVisible: boolean
+  /** Per-station goal text in Iris panel — sent with apply; cleared after successful apply for that station */
+  irisGoalByStation: Record<StationId, string>
 
   // Ambient
   ambientTint: string
@@ -99,6 +108,10 @@ interface StudioState {
   backToCreating: () => void
   setIrisReaction: (text: string | null) => void
   setIrisSuggestions: (suggestions: IrisSuggestion[]) => void
+  setIrisGoalForStation: (station: StationId, text: string) => void
+  clearIrisGoalForStation: (station: StationId) => void
+  /** Load selected gallery image and open v2 Magic Studio (greeting + Let's go still shown) */
+  enterMagicStudioFromGallery: (imageUrl: string) => void
   reset: () => void
 }
 
@@ -124,6 +137,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   irisSuggestions: [],
   irisReaction: null,
   irisVisible: true,
+  irisGoalByStation: { ...EMPTY_IRIS_GOALS_BY_STATION },
   ambientTint: '#F0EDE8',
 
   completeGreeting: () =>
@@ -255,6 +269,24 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setIrisSuggestions: (suggestions) =>
     set({ irisSuggestions: suggestions }),
 
+  setIrisGoalForStation: (station, text) =>
+    set((state) => ({
+      irisGoalByStation: { ...state.irisGoalByStation, [station]: text },
+    })),
+
+  clearIrisGoalForStation: (station) =>
+    set((state) => ({
+      irisGoalByStation: { ...state.irisGoalByStation, [station]: '' },
+    })),
+
+  enterMagicStudioFromGallery: (imageUrl) => {
+    get().reset()
+    set({
+      sourceImage: imageUrl,
+      currentComposite: imageUrl,
+    })
+  },
+
   reset: () =>
     set({
       phase: 'greeting',
@@ -277,6 +309,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       irisSuggestions: [],
       irisReaction: null,
       irisVisible: true,
+      irisGoalByStation: { ...EMPTY_IRIS_GOALS_BY_STATION },
       ambientTint: '#F0EDE8',
     }),
 }))

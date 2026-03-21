@@ -47,6 +47,18 @@ export function StudioImage({ overlay, topRight, bottomRight }: StudioImageProps
         {/* Overlay slot (for variations grid, etc.) */}
         {overlay}
 
+        {/* Brand — top-left on preview (above reveal overlay z-20 so it stays visible in the corner) */}
+        <div className="pointer-events-none absolute left-3 top-3 z-[30]">
+          <img
+            src="https://instaheadshots.com/images/logo-horizontal.svg"
+            alt="Instaheadshots"
+            width={107}
+            height={24}
+            className="h-[22px] w-auto max-w-[min(42vw,7.5rem)] object-contain object-left drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+            draggable={false}
+          />
+        </div>
+
         {/* Top-right slot (version board) */}
         {topRight && (
           <div className="absolute top-3 right-3 z-10">

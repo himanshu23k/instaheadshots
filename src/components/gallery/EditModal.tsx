@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { Image, Shirt, Eraser, ArrowRight, HelpCircle, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Image, Shirt, Eraser, ArrowRight, HelpCircle, X, Sparkles } from 'lucide-react'
 import { Gem } from 'lucide-react'
 import { useJourneyStore } from '@/store/journey-store'
+import { useStudioStore } from '@/store/studio-store'
 import { ImagePreview } from '@/components/common/ImagePreview'
 
 export function EditModal() {
+  const navigate = useNavigate()
   const showEditModal = useJourneyStore((s) => s.showEditModal)
   const setShowEditModal = useJourneyStore((s) => s.setShowEditModal)
   const startJourney = useJourneyStore((s) => s.startJourney)
   const galleryImages = useJourneyStore((s) => s.galleryImages)
   const selectedIndex = useJourneyStore((s) => s.selectedImageIndex)
+  const enterMagicStudioFromGallery = useStudioStore((s) => s.enterMagicStudioFromGallery)
   const [showHelp, setShowHelp] = useState(false)
 
   if (!showEditModal) return null
@@ -81,6 +85,33 @@ export function EditModal() {
                   aria-label="Help"
                 >
                   <HelpCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mb-6 rounded-[var(--radius-btn)] border-2 border-ih-accent/35 bg-gradient-to-br from-[#E6F9F1]/80 to-surface p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedImage) {
+                      enterMagicStudioFromGallery(selectedImage)
+                      setShowEditModal(false)
+                      navigate('/edit-v2')
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 rounded-[calc(var(--radius-btn)-2px)] px-4 py-3 text-left transition-colors hover:bg-white/60"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ih-accent/15">
+                    <Sparkles className="h-5 w-5 text-ih-accent" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold text-primary-cta">
+                      Magic Studio
+                    </span>
+                    <span className="block text-[12px] text-ih-muted">
+                      Full v2 studio — look, setting, style & refine
+                    </span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-ih-muted" />
                 </button>
               </div>
 
