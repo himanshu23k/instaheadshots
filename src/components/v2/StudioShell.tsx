@@ -13,6 +13,7 @@ import { LookStation } from './stations/LookStation'
 import { SettingStation } from './stations/SettingStation'
 import { StyleStation } from './stations/StyleStation'
 import { RefineStation } from './stations/RefineStation'
+import { RefineEraserOverlay } from './refine/RefineEraserOverlay'
 import { RevealOverlay } from './reveal/RevealOverlay'
 import { VariationsGrid } from './reveal/VariationsGrid'
 import { VersionBoard } from './versions/VersionBoard'
@@ -198,7 +199,13 @@ export function StudioShell() {
           }}
         >
           <StudioImage
-            overlay={<><RevealOverlay /><VariationsGrid /></>}
+            overlay={
+              <>
+                <RevealOverlay />
+                <VariationsGrid />
+                <RefineEraserOverlay />
+              </>
+            }
             topRight={<VersionBoard />}
             bottomRight={<PinButton />}
           />

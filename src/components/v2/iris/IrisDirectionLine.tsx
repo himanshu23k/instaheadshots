@@ -102,6 +102,8 @@ export function IrisDirectionLine() {
     28
   )
 
+  const [irisCollapsed, setIrisCollapsed] = useState(false)
+
   const [showReaction, setShowReaction] = useState(false)
   const [reactionText, setReactionText] = useState('')
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -153,13 +155,36 @@ export function IrisDirectionLine() {
   return (
     <section
       className={cn(
-        'group relative w-full overflow-hidden text-left transition-[box-shadow,background-color] duration-200',
+        'group relative w-full overflow-hidden text-left transition-[box-shadow,background-color,padding] duration-200',
         'border border-ih-border bg-gradient-to-b from-[#FDFCFA] to-[#F7F6F3]',
         'rounded-xl shadow-sm shadow-black/[0.04] mb-2',
         'hover:from-[#FFFFFF] hover:to-[#F9F8F6]',
-        'px-5 py-3'
+        'px-5',
+        irisCollapsed &&
+          'cursor-pointer py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ih-accent/40 focus-visible:ring-offset-2',
+        !irisCollapsed && 'py-3'
       )}
       aria-label="Assistant"
+      aria-expanded={!irisCollapsed}
+      role={irisCollapsed ? 'button' : undefined}
+      tabIndex={irisCollapsed ? 0 : undefined}
+      onClick={
+        irisCollapsed
+          ? () => {
+              setIrisCollapsed(false)
+            }
+          : undefined
+      }
+      onKeyDown={
+        irisCollapsed
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setIrisCollapsed(false)
+              }
+            }
+          : undefined
+      }
     >
       <BorderBeam
         duration={10}
@@ -180,85 +205,113 @@ export function IrisDirectionLine() {
         className="from-transparent via-50%"
       />
 
-      <div
-        className={cn(
-          'relative z-[1] w-full min-w-0 flex flex-col gap-2 isolate',
-          IRIS_SCROLL_BODY_CLASS
-        )}
-      >
-        {/* Sticky: avatar + bubble stay visible when chips/textarea overflow */}
-        <div className="sticky top-0 z-10 flex shrink-0 gap-2.5 items-start w-full min-w-0 bg-gradient-to-b from-[#FDFCFA] to-[#F7F6F3] pb-2 border-b border-ih-border/30">
+      {irisCollapsed ? (
+        <div className="relative z-[1] flex w-full min-w-0 items-center justify-start gap-2.5">
           <img
             src={IRIS_AVATAR}
             alt=""
             width={32}
             height={32}
-            className="shrink-0 w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+            className="pointer-events-none shrink-0 w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
             draggable={false}
           />
-
-          <div
-            className="flex-1 min-w-0 min-h-[2.75rem] rounded-xl rounded-tl-sm border border-ih-border/80 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="relative min-h-[2rem]">
-              <p
-                className="text-[12px] italic leading-[1.35] text-[#4A4A4A] transition-opacity duration-150"
-                style={{
-                  opacity: showReaction ? 0 : 1,
-                }}
-              >
-                {typedGreeting}
-                {!showReaction && !greetingTyped && (
-                  <span
-                    className="ml-0.5 inline-block h-[12px] w-[2px] translate-y-[1px] align-middle bg-ih-muted/80"
-                    style={{ animation: 'typing-cursor 0.8s step-end infinite' }}
-                    aria-hidden
-                  />
-                )}
-              </p>
-              <p
-                className="absolute left-0 top-0 right-0 text-[12px] italic leading-[1.35] text-[#4A4A4A] transition-opacity duration-150"
-                style={{ opacity: showReaction ? 1 : 0 }}
-              >
-                {reactionText}
-              </p>
-            </div>
+          <div className="w-fit shrink-0 rounded-xl rounded-tl-sm border border-ih-border/80 bg-white px-2 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <p className="whitespace-nowrap text-[12px] font-medium leading-tight text-[#4A4A4A]">
+              Need Help?
+            </p>
           </div>
         </div>
-
-        <div className="w-full min-w-0 flex shrink-0 flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide">
-          {quickPicks.map((chip) => (
+      ) : (
+        <div
+          className={cn(
+            'relative z-[1] w-full min-w-0 flex flex-col gap-2 isolate',
+            IRIS_SCROLL_BODY_CLASS
+          )}
+        >
+          {/* Sticky: avatar + bubble stay visible when chips/textarea overflow */}
+          <div className="sticky top-0 z-10 flex shrink-0 gap-2.5 items-start w-full min-w-0 bg-gradient-to-b from-[#FDFCFA] to-[#F7F6F3] pb-2 border-b border-ih-border/30">
             <button
-              key={chip}
               type="button"
-              onClick={() => applyChip(chip)}
-              className="shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full border border-ih-border bg-[#FAFAFA] text-foreground hover:bg-ih-border/40 active:scale-[0.98] transition-colors whitespace-nowrap"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIrisCollapsed(true)
+              }}
+              className="shrink-0 rounded-full ring-2 ring-white shadow-sm transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ih-accent/50 focus-visible:ring-offset-2"
+              aria-label="Collapse assistant panel"
             >
-              {chip}
+              <img
+                src={IRIS_AVATAR}
+                alt=""
+                width={32}
+                height={32}
+                className="pointer-events-none block h-8 w-8 rounded-full object-cover"
+                draggable={false}
+              />
             </button>
-          ))}
-        </div>
 
-        <div className="relative w-full min-w-0 shrink-0 rounded-md border border-ih-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-inset focus-within:ring-ih-accent/35">
-          <textarea
-            ref={goalTextareaRef}
-            value={stationGoal}
-            onChange={(e) => {
-              const v = e.target.value
-              setIrisGoalForStation(activeStation, v)
-              if (activeStation === 'refine') {
-                updateRefine({ prompt: v.slice(0, 300) })
-              }
-            }}
-            placeholder="Describe your goal or question…"
-            rows={1}
-            spellCheck
-            className="w-full min-w-0 min-h-[3rem] border-0 bg-transparent text-[12px] leading-snug text-foreground placeholder:text-ih-muted/80 focus:outline-none focus:ring-0 rounded-md pl-2.5 pr-2.5 pt-2 pb-2.5 box-border resize-none break-words whitespace-pre-wrap"
-          />
+            <div
+              className="flex-1 min-w-0 min-h-[2.75rem] rounded-xl rounded-tl-sm border border-ih-border/80 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="relative min-h-[2rem]">
+                <p
+                  className="text-[12px] italic leading-[1.35] text-[#4A4A4A] transition-opacity duration-150"
+                  style={{
+                    opacity: showReaction ? 0 : 1,
+                  }}
+                >
+                  {typedGreeting}
+                  {!showReaction && !greetingTyped && (
+                    <span
+                      className="ml-0.5 inline-block h-[12px] w-[2px] translate-y-[1px] align-middle bg-ih-muted/80"
+                      style={{ animation: 'typing-cursor 0.8s step-end infinite' }}
+                      aria-hidden
+                    />
+                  )}
+                </p>
+                <p
+                  className="absolute left-0 top-0 right-0 text-[12px] italic leading-[1.35] text-[#4A4A4A] transition-opacity duration-150"
+                  style={{ opacity: showReaction ? 1 : 0 }}
+                >
+                  {reactionText}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full min-w-0 flex shrink-0 flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide">
+            {quickPicks.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => applyChip(chip)}
+                className="shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full border border-ih-border bg-[#FAFAFA] text-foreground hover:bg-ih-border/40 active:scale-[0.98] transition-colors whitespace-nowrap"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full min-w-0 shrink-0 rounded-md border border-ih-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-inset focus-within:ring-ih-accent/35">
+            <textarea
+              ref={goalTextareaRef}
+              value={stationGoal}
+              onChange={(e) => {
+                const v = e.target.value
+                setIrisGoalForStation(activeStation, v)
+                if (activeStation === 'refine') {
+                  updateRefine({ prompt: v.slice(0, 300) })
+                }
+              }}
+              placeholder="Describe your goal or question…"
+              rows={1}
+              spellCheck
+              className="w-full min-w-0 min-h-[3rem] border-0 bg-transparent text-[12px] leading-snug text-foreground placeholder:text-ih-muted/80 focus:outline-none focus:ring-0 rounded-md pl-2.5 pr-2.5 pt-2 pb-2.5 box-border resize-none break-words whitespace-pre-wrap"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }

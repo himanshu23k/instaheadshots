@@ -61,5 +61,8 @@ export function buildRefineGoalDescription(r: RefineSelections): string {
   }
   if (r.adjustments.hue !== 0) adj.push(`hue ${r.adjustments.hue}°`)
   if (adj.length) parts.push(`Adjustments: ${adj.join(', ')}.`)
+  if (r.eraserPoints.length > 0) {
+    parts.push(`Magic eraser: ${r.eraserPoints.length} mark${r.eraserPoints.length === 1 ? '' : 's'}.`)
+  }
   return parts.join(' ')
 }
