@@ -109,6 +109,34 @@ export function AIPromptRefinement() {
           <BeforeAfterToggle mode={previewMode} onToggle={setPreviewMode} />
         ) : null
       }
+      footer={
+        <>
+          {renderState.status === 'failure' && (
+            <p className="text-ih-danger text-[12px] mb-2" role="alert">
+              {renderState.error}
+            </p>
+          )}
+
+          {prompt.trim() ? (
+            <CreditActionButton
+              label="Apply Prompt →"
+              cost={1}
+              isFree={isFree}
+              disabled={renderState.status === 'loading'}
+              loading={renderState.status === 'loading'}
+              onClick={handleApply}
+            />
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full border-ih-border text-primary-cta"
+              onClick={handleSkip}
+            >
+              Skip — Continue →
+            </Button>
+          )}
+        </>
+      }
     >
       <h2 className="text-[18px] font-medium mb-1">Describe refinements</h2>
       <p className="text-[12px] text-ih-muted mb-4">
@@ -157,33 +185,6 @@ export function AIPromptRefinement() {
           {moderationError}
         </p>
       )}
-
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1">
-        {renderState.status === 'failure' && (
-          <p className="text-ih-danger text-[12px] mb-2" role="alert">
-            {renderState.error}
-          </p>
-        )}
-
-        {prompt.trim() ? (
-          <CreditActionButton
-            label="Apply Prompt →"
-            cost={1}
-            isFree={isFree}
-            disabled={renderState.status === 'loading'}
-            loading={renderState.status === 'loading'}
-            onClick={handleApply}
-          />
-        ) : (
-          <Button
-            variant="outline"
-            className="w-full border-ih-border text-primary-cta"
-            onClick={handleSkip}
-          >
-            Skip — Continue →
-          </Button>
-        )}
-      </div>
     </StepLayout>
   )
 }

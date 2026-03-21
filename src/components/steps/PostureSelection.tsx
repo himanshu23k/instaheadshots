@@ -86,6 +86,26 @@ export function PostureSelection() {
           <BeforeAfterToggle mode={previewMode} onToggle={setPreviewMode} />
         ) : null
       }
+      footer={
+        <>
+          {renderState.status === 'failure' && (
+            <p className="text-ih-danger text-[12px] mb-2" role="alert">
+              {renderState.error}
+            </p>
+          )}
+          <p className="mb-2 text-[11px] text-ih-warning-text">
+            Beta: Posture quality may vary. Credit is still charged on apply.
+          </p>
+          <CreditActionButton
+            label={isNoChange ? 'Continue →' : 'Apply Posture →'}
+            cost={isNoChange ? 0 : 1}
+            isFree={isFree}
+            disabled={renderState.status === 'loading'}
+            loading={renderState.status === 'loading'}
+            onClick={handleApply}
+          />
+        </>
+      }
     >
       <div className="flex items-center gap-2 mb-1">
         <h2 className="text-[18px] font-medium">Choose posture</h2>
@@ -102,25 +122,6 @@ export function PostureSelection() {
         selectedId={selectedId}
         onSelect={handleSelect}
       />
-
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-4">
-        {renderState.status === 'failure' && (
-          <p className="text-ih-danger text-[12px] mb-2" role="alert">
-            {renderState.error}
-          </p>
-        )}
-        <CreditActionButton
-          label={isNoChange ? 'Continue →' : 'Apply Posture →'}
-          cost={isNoChange ? 0 : 1}
-          isFree={isFree}
-          disabled={renderState.status === 'loading'}
-          loading={renderState.status === 'loading'}
-          onClick={handleApply}
-        />
-        <p className="text-[11px] text-ih-warning-text mt-2">
-          Beta: Posture quality may vary. Credit is still charged on apply.
-        </p>
-      </div>
     </StepLayout>
   )
 }

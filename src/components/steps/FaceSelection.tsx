@@ -50,7 +50,17 @@ export function FaceSelection() {
   }
 
   return (
-    <StepLayout previewSrc={previewSrc} previewAlt="Selected face preview">
+    <StepLayout
+      previewSrc={previewSrc}
+      previewAlt="Selected face preview"
+      footer={
+        <CreditActionButton
+          label="Confirm Face →"
+          cost={0}
+          onClick={handleConfirm}
+        />
+      }
+    >
       <h2 className="text-[18px] font-medium mb-1">Choose your face</h2>
       <p className="text-[12px] text-ih-muted mb-4">
         All edits apply to this image.
@@ -68,14 +78,6 @@ export function FaceSelection() {
         onSelect={handleSelect}
         columns={3}
       />
-
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-4">
-        <CreditActionButton
-          label="Confirm Face →"
-          cost={0}
-          onClick={handleConfirm}
-        />
-      </div>
     </StepLayout>
   )
 }

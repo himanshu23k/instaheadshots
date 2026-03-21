@@ -5,6 +5,8 @@ import { emitScrollHidden } from '@/hooks/use-scroll-direction'
 
 interface StepLayoutProps {
   children: ReactNode
+  /** Pinned to the bottom of the left panel on all breakpoints (replaces fixed mobile footer). */
+  footer?: ReactNode
   previewSrc: string
   previewAlt?: string
   previewOverlay?: ReactNode
@@ -13,6 +15,7 @@ interface StepLayoutProps {
 
 export function StepLayout({
   children,
+  footer,
   previewSrc,
   previewAlt,
   previewOverlay,
@@ -67,12 +70,21 @@ export function StepLayout({
         )}
       </div>
 
-      {/* Left panel — options */}
-      <div
-        className="flex-1 min-h-0 overflow-y-auto lg:flex-none lg:w-[360px] bg-surface border-r border-ih-border"
-        onScroll={handleScroll}
-      >
-        <div className="p-4 pb-20 lg:pb-4">{children}</div>
+      {/* Left panel — scrollable options + footer pinned to bottom of column */}
+      <div className="flex min-h-0 flex-1 flex-col lg:w-[360px] lg:flex-none bg-surface border-r border-ih-border">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto p-4"
+            onScroll={handleScroll}
+          >
+            {children}
+          </div>
+          {footer != null && (
+            <div className="shrink-0 border-t border-ih-border bg-surface px-4 pt-2 pb-4">
+              {footer}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right panel — preview (desktop only) */}

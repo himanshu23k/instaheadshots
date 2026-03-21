@@ -120,6 +120,14 @@ export function MagicEraser() {
       previewTopRight={
         <BeforeAfterToggle mode={previewMode} onToggle={setPreviewMode} />
       }
+      footer={
+        <Button
+          onClick={handleFinish}
+          className="w-full bg-primary-cta text-white hover:bg-primary-cta-hover py-3"
+        >
+          Finish →
+        </Button>
+      }
     >
       <h2 className="text-[18px] font-medium mb-1">Edits</h2>
       <p className="text-[12px] text-ih-muted mb-4">
@@ -230,15 +238,6 @@ export function MagicEraser() {
             {erasePoints.length} point{erasePoints.length !== 1 ? 's' : ''} marked
           </p>
         </div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-6">
-        <Button
-          onClick={handleFinish}
-          className="w-full bg-primary-cta text-white hover:bg-primary-cta-hover py-3"
-        >
-          Finish →
-        </Button>
       </div>
     </StepLayout>
   )

@@ -100,6 +100,23 @@ export function BackgroundSelection() {
           <BeforeAfterToggle mode={previewMode} onToggle={setPreviewMode} />
         ) : null
       }
+      footer={
+        <>
+          {renderState.status === 'failure' && (
+            <p className="text-ih-danger text-[12px] mb-2" role="alert">
+              {renderState.error}
+            </p>
+          )}
+          <CreditActionButton
+            label="Apply Background →"
+            cost={1}
+            isFree={isFree}
+            disabled={!selectedId || renderState.status === 'loading'}
+            loading={renderState.status === 'loading'}
+            onClick={handleApply}
+          />
+        </>
+      }
     >
       <h2 className="text-[18px] font-medium mb-4">Change background</h2>
 
@@ -125,22 +142,6 @@ export function BackgroundSelection() {
         selectedId={selectedId}
         onSelect={handleSelect}
       />
-
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-surface px-4 pt-2 pb-4 border-t border-ih-border lg:border-t-0 lg:static lg:px-0 lg:pb-1 lg:mt-4">
-        {renderState.status === 'failure' && (
-          <p className="text-ih-danger text-[12px] mb-2" role="alert">
-            {renderState.error}
-          </p>
-        )}
-        <CreditActionButton
-          label="Apply Background →"
-          cost={1}
-          isFree={isFree}
-          disabled={!selectedId || renderState.status === 'loading'}
-          loading={renderState.status === 'loading'}
-          onClick={handleApply}
-        />
-      </div>
     </StepLayout>
   )
 }
