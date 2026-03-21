@@ -199,13 +199,13 @@ export async function simulateLookRender(
   })
 }
 
-// Mock carousel assets (subset guaranteed in repo; duplicates ok for demo)
+// Mock carousel — Unsplash (shirt / retail; hero is first). URLs verified HTTP 200.
 const MOCK_CAROUSEL_IMAGES = [
-  '/mock/outfits/outfit-05.jpg',
-  '/mock/outfits/outfit-12.jpg',
-  '/mock/outfits/outfit-15.jpg',
-  '/mock/outfits/outfit-05.jpg',
-  '/mock/outfits/outfit-12.jpg',
+  'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1200&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1594938291221-94f18cbb5660?w=1200&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1200&q=80&auto=format&fit=crop',
 ]
 
 function isLikelyProductUrl(url: string): boolean {

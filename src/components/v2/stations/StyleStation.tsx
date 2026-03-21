@@ -30,12 +30,6 @@ export function StyleStation() {
   const outfitScrollRef = useRef<HTMLDivElement>(null)
   const fetchAbortRef = useRef<AbortController | null>(null)
 
-  const onOutfitScroll = useCallback(() => {
-    const el = outfitScrollRef.current
-    if (!el || el.scrollTop <= 0) return
-    setCustomLookOpen(false)
-  }, [])
-
   const selections = useStudioStore((s) => s.stationSelections.style)
   const updateStyle = useStudioStore((s) => s.updateStyleSelection)
   const setIrisGoalForStation = useStudioStore((s) => s.setIrisGoalForStation)
@@ -44,6 +38,14 @@ export function StyleStation() {
 
   const selectedOutfit = selections.outfitId
   const shopProduct = selections.shopProduct
+
+  /** Scroll no longer collapses Custom look while a shop preview is active */
+  const onOutfitScroll = useCallback(() => {
+    const el = outfitScrollRef.current
+    if (!el || el.scrollTop <= 0) return
+    if (shopProduct) return
+    setCustomLookOpen(false)
+  }, [shopProduct])
 
   const filtered = useMemo(
     () =>
@@ -96,6 +98,23 @@ export function StyleStation() {
     updateStyle({ shopProduct: null, variantId: null })
     syncStyleIris()
   }, [updateStyle, syncStyleIris])
+
+  /** Minus / header: collapse panel; if a shop preview was loaded, clear it (same as back). */
+  const handleCustomLookHeaderClick = useCallback(() => {
+    setCustomLookOpen((open) => {
+      if (open) {
+        if (shopProduct) {
+          fetchAbortRef.current?.abort()
+          setFetchError(null)
+          setFetchLoading(false)
+          updateStyle({ shopProduct: null, variantId: null })
+          syncStyleIris()
+        }
+        return false
+      }
+      return true
+    })
+  }, [shopProduct, updateStyle, syncStyleIris])
 
   const handleFetchShop = useCallback(async () => {
     const url = shopUrl.trim()
@@ -174,14 +193,20 @@ export function StyleStation() {
         </div>
       </div>
 
-      {/* Scrollable outfit grid — scroll collapses custom look */}
+      {/* Scrollable outfit grid — scroll collapses custom look (not while shop preview is active) */}
       <div
         ref={outfitScrollRef}
         onScroll={onOutfitScroll}
         className="flex-1 min-h-0 overflow-y-auto pr-1 studio-scroll"
       >
-        <p className="text-[12px] text-ih-muted font-medium mb-2">Outfits</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={cn(
+            'transition-opacity duration-200 ease-out',
+            shopProduct ? 'opacity-10' : 'opacity-100'
+          )}
+        >
+          <p className="text-[12px] text-ih-muted font-medium mb-2">Outfits</p>
+          <div className="grid grid-cols-2 gap-2">
           {filtered.map((outfit) => {
             const isSelected = selectedOutfit === outfit.id && !shopProduct
             return (
@@ -227,6 +252,7 @@ export function StyleStation() {
               </button>
             )
           })}
+          </div>
         </div>
       </div>
 
@@ -248,7 +274,7 @@ export function StyleStation() {
           )}
           <button
             type="button"
-            onClick={() => setCustomLookOpen((o) => !o)}
+            onClick={handleCustomLookHeaderClick}
             className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2.5 text-left transition-colors hover:bg-black/[0.02]"
             aria-expanded={customLookOpen}
             aria-controls="style-station-custom-look-panel"
@@ -326,7 +352,15 @@ export function StyleStation() {
                   <img
                     src={shopProduct.image}
                     alt=""
-                    className="aspect-[4/3] w-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const el = e.currentTarget
+                      if (el.src.startsWith(`${window.location.origin}/mock/`)) return
+                      el.src = '/mock/outfits/outfit-05.jpg'
+                    }}
+                    className="aspect-[4/3] w-full min-h-[120px] object-cover bg-ih-border/30"
                   />
                 </div>
                 <div className="min-w-0 space-y-0.5">

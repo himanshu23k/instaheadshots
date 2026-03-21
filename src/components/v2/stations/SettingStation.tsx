@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import { Check, Minus, Plus, Upload, X } from 'lucide-react'
+import { ArrowLeft, Check, Minus, Plus, Upload, X } from 'lucide-react'
 import { useStudioStore } from '@/store/studio-store'
 import { useCreditStore } from '@/store/credit-store'
 import { useStudioRender } from '@/hooks/use-studio-render'
@@ -25,12 +25,6 @@ export function SettingStation() {
   const bgScrollRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const onBgScroll = useCallback(() => {
-    const el = bgScrollRef.current
-    if (!el || el.scrollTop <= 0) return
-    setUploadOpen(false)
-  }, [])
-
   const selections = useStudioStore((s) => s.stationSelections.setting)
   const updateSetting = useStudioStore((s) => s.updateSettingSelection)
   const setIrisGoalForStation = useStudioStore((s) => s.setIrisGoalForStation)
@@ -39,6 +33,14 @@ export function SettingStation() {
 
   const selectedBg = selections.backgroundId
   const customUpload = selections.customUpload
+
+  /** Scroll does not collapse upload while a custom image is active (parity with Style custom look) */
+  const onBgScroll = useCallback(() => {
+    const el = bgScrollRef.current
+    if (!el || el.scrollTop <= 0) return
+    if (customUpload) return
+    setUploadOpen(false)
+  }, [customUpload])
 
   const revokeIfBlob = useCallback((url: string | null) => {
     if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
@@ -75,6 +77,22 @@ export function SettingStation() {
     updateSetting({ customUpload: null })
     const s = useStudioStore.getState().stationSelections.setting
     setIrisGoalForStation('setting', buildSettingGoalDescription(s.backgroundId, s.customUpload))
+  }, [customUpload, revokeIfBlob, updateSetting, setIrisGoalForStation])
+
+  /** Minus: collapse; if an upload is active, clear it (parity with Style custom look header) */
+  const handleUploadHeaderClick = useCallback(() => {
+    setUploadOpen((open) => {
+      if (open) {
+        if (customUpload) {
+          revokeIfBlob(customUpload)
+          updateSetting({ customUpload: null })
+          const s = useStudioStore.getState().stationSelections.setting
+          setIrisGoalForStation('setting', buildSettingGoalDescription(s.backgroundId, s.customUpload))
+        }
+        return false
+      }
+      return true
+    })
   }, [customUpload, revokeIfBlob, updateSetting, setIrisGoalForStation])
 
   const filtered = useMemo(
@@ -137,14 +155,20 @@ export function SettingStation() {
         </div>
       </div>
 
-      {/* Scrollable background grid — scroll collapses upload section */}
+      {/* Scrollable background grid — scroll collapses upload (not while custom upload preview is active) */}
       <div
         ref={bgScrollRef}
         onScroll={onBgScroll}
         className="flex-1 min-h-0 overflow-y-auto pr-1 studio-scroll"
       >
-        <p className="text-[12px] text-ih-muted font-medium mb-2">Backgrounds</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={cn(
+            'transition-opacity duration-200 ease-out',
+            customUpload ? 'opacity-10' : 'opacity-100'
+          )}
+        >
+          <p className="text-[12px] text-ih-muted font-medium mb-2">Backgrounds</p>
+          <div className="grid grid-cols-2 gap-2">
           {filtered.map((bg) => {
             const isSelected = selectedBg === bg.id && !customUpload
             return (
@@ -190,28 +214,44 @@ export function SettingStation() {
               </button>
             )
           })}
+          </div>
         </div>
       </div>
 
-      {/* Collapsible upload — same pattern as Look posture; smooth slide via CollapsibleSlidePanel */}
+      {/* Collapsible upload — same pattern as Style custom look; smooth slide via CollapsibleSlidePanel */}
       <div className="shrink-0 border-t border-[#E0DDD8]">
-        <button
-          type="button"
-          onClick={() => setUploadOpen((o) => !o)}
-          className="flex w-full items-center justify-between gap-2 py-2.5 text-left transition-colors hover:bg-black/[0.02]"
-          aria-expanded={uploadOpen}
-          aria-controls="setting-station-upload-panel"
-          id="setting-station-upload-heading"
-        >
-          <div className="min-w-0">
-            <span className="text-[12px] font-medium text-ih-muted">Upload background</span>
-          </div>
-          {uploadOpen ? (
-            <Minus className="h-4 w-4 shrink-0 text-ih-muted" aria-hidden />
-          ) : (
-            <Plus className="h-4 w-4 shrink-0 text-ih-muted" aria-hidden />
+        <div className="flex w-full items-center gap-1.5 pl-1 pr-1">
+          {customUpload && (
+            <button
+              type="button"
+              onClick={clearCustomUpload}
+              className={cn(
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-0 bg-transparent text-ih-muted',
+                'transition-colors hover:bg-black/[0.06] hover:text-foreground active:scale-[0.98]'
+              )}
+              aria-label="Back to presets and upload"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={handleUploadHeaderClick}
+            className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2.5 text-left transition-colors hover:bg-black/[0.02]"
+            aria-expanded={uploadOpen}
+            aria-controls="setting-station-upload-panel"
+            id="setting-station-upload-heading"
+          >
+            <div className="min-w-0">
+              <span className="text-[12px] font-medium text-ih-muted">Upload background</span>
+            </div>
+            {uploadOpen ? (
+              <Minus className="h-4 w-4 shrink-0 text-ih-muted" aria-hidden />
+            ) : (
+              <Plus className="h-4 w-4 shrink-0 text-ih-muted" aria-hidden />
+            )}
+          </button>
+        </div>
 
         <CollapsibleSlidePanel open={uploadOpen} innerClassName="pb-3">
           <div
@@ -227,21 +267,23 @@ export function SettingStation() {
               className="sr-only"
               onChange={handleFileChange}
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                'flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-ih-border bg-[#FAFAFA] px-3 py-4 text-center transition-colors',
-                'hover:border-ih-muted hover:bg-ih-border/15 active:scale-[0.99]'
-              )}
-            >
-              <Upload className="h-6 w-6 text-ih-muted" aria-hidden />
-              <span className="text-[12px] font-medium text-foreground">Choose image</span>
-              <span className="text-[10px] text-ih-muted">JPG, PNG or WebP · max 10 MB</span>
-            </button>
+            {!customUpload && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={cn(
+                  'flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-ih-border bg-[#FAFAFA] px-3 py-4 text-center transition-colors',
+                  'hover:border-ih-muted hover:bg-ih-border/15 active:scale-[0.99]'
+                )}
+              >
+                <Upload className="h-6 w-6 text-ih-muted" aria-hidden />
+                <span className="text-[12px] font-medium text-foreground">Choose image</span>
+                <span className="text-[10px] text-ih-muted">JPG, PNG or WebP · max 10 MB</span>
+              </button>
+            )}
 
             {customUpload && (
-              <div className="relative mt-2 overflow-hidden rounded-lg border border-ih-border bg-white">
+              <div className="relative overflow-hidden rounded-lg border border-ih-border bg-white">
                 <img
                   src={customUpload}
                   alt="Uploaded background preview"

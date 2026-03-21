@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Droplets, Sun, Thermometer, Palette, RotateCcw, Eraser, Undo2 } from 'lucide-react'
 import { useStudioStore } from '@/store/studio-store'
 import { useCreditStore } from '@/store/credit-store'
@@ -68,6 +69,29 @@ const SLIDER_CONFIG: {
     high: '+180°',
   },
 ]
+
+const BRUSH_DATUM = 20
+
+/** Filled segment between default (datum) and current value — native range has no fill without this. */
+function refineTrackFillFromDatum(
+  min: number,
+  max: number,
+  value: number,
+  datum: number
+): string {
+  const span = max - min
+  if (span <= 0) {
+    return 'linear-gradient(to right, rgb(224 221 216 / 0.5) 0%, rgb(224 221 216 / 0.5) 100%)'
+  }
+  const pct = (v: number) => ((v - min) / span) * 100
+  const pD = pct(datum)
+  const pV = pct(value)
+  const lo = Math.min(pD, pV)
+  const hi = Math.max(pD, pV)
+  const dim = 'rgb(224 221 216 / 0.5)'
+  const fill = 'var(--color-ih-accent)'
+  return `linear-gradient(to right, ${dim} 0%, ${dim} ${lo}%, ${fill} ${lo}%, ${fill} ${hi}%, ${dim} ${hi}%, ${dim} 100%)`
+}
 
 export function RefineStation() {
   const selections = useStudioStore((s) => s.stationSelections.refine)
@@ -168,6 +192,16 @@ export function RefineStation() {
                   max={slider.max}
                   value={value}
                   aria-label={`${slider.label}, ${slider.hint}`}
+                  style={
+                    {
+                      '--range-track-fill': refineTrackFillFromDatum(
+                        slider.min,
+                        slider.max,
+                        value,
+                        slider.default
+                      ),
+                    } as CSSProperties
+                  }
                   onChange={(e) => {
                     updateRefine({
                       adjustments: {
@@ -178,7 +212,7 @@ export function RefineStation() {
                     syncRefineIris()
                   }}
                   className={cn(
-                    'h-2 w-full cursor-pointer appearance-none rounded-full bg-ih-border/50',
+                    'refine-range-slider h-2 w-full cursor-pointer rounded-full',
                     'accent-[var(--color-ih-accent)]',
                     '[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[var(--color-ih-accent)] [&::-webkit-slider-thumb]:shadow-sm',
                     '[&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[var(--color-ih-accent)]'
@@ -285,9 +319,19 @@ export function RefineStation() {
               max={56}
               value={selections.brushSize}
               aria-label="Eraser brush size"
+              style={
+                {
+                  '--range-track-fill': refineTrackFillFromDatum(
+                    8,
+                    56,
+                    selections.brushSize,
+                    BRUSH_DATUM
+                  ),
+                } as CSSProperties
+              }
               onChange={(e) => updateRefine({ brushSize: Number(e.target.value) })}
               className={cn(
-                'h-2 w-full cursor-pointer appearance-none rounded-full bg-ih-border/50',
+                'refine-range-slider h-2 w-full cursor-pointer rounded-full',
                 'accent-[var(--color-ih-accent)]',
                 '[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[var(--color-ih-accent)] [&::-webkit-slider-thumb]:shadow-sm',
                 '[&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[var(--color-ih-accent)]'

@@ -286,3 +286,23 @@
 .studio-scroll::-webkit-scrollbar-thumb:hover {
   background: #C8C5C0;
 }
+
+/* ── Refine station range: filled segment from datum → value (--range-track-fill set inline) ── */
+.refine-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.refine-range-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--range-track-fill, rgb(224 221 216 / 0.5));
+}
+.refine-range-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--range-track-fill, rgb(224 221 216 / 0.5));
+}
+.refine-range-slider::-webkit-slider-thumb {
+  margin-top: -4px;
+}
