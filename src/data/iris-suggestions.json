@@ -1,0 +1,56 @@
+{
+  "look": {
+    "nudges": [
+      { "text": "Try the 3/4 angle — it adds depth", "optionId": "posture-3q-right" },
+      { "text": "The relaxed lean feels more approachable", "optionId": "posture-lean" }
+    ],
+    "pairings": [
+      { "text": "That angle + a warm backdrop? Let me show you.", "targetStation": "setting" },
+      { "text": "Good angle. Now let's dress the part.", "targetStation": "style" }
+    ]
+  },
+  "setting": {
+    "nudges": [
+      { "text": "Try the garden — it softens everything", "optionId": "bg-garden" },
+      { "text": "The dark studio adds drama", "optionId": "bg-dark-grey" },
+      { "text": "Outdoor light changes the whole mood", "optionId": "bg-city-street" }
+    ],
+    "pairings": [
+      { "text": "That backdrop + a blazer would be sharp.", "targetStation": "style" },
+      { "text": "This setting wants warmer light. Let me refine it.", "targetStation": "refine" }
+    ]
+  },
+  "style": {
+    "nudges": [
+      { "text": "The navy blazer reads executive", "optionId": "outfit-black-blazer" },
+      { "text": "Try something casual — it might surprise you", "optionId": "outfit-polo" }
+    ],
+    "pairings": [
+      { "text": "Good outfit. The background should match this energy.", "targetStation": "setting" },
+      { "text": "Now let's polish the details.", "targetStation": "refine" }
+    ]
+  },
+  "refine": {
+    "nudges": [
+      { "text": "Warmer lighting would tie this together", "optionId": "warm-lighting" },
+      { "text": "Try lifting the shadows a bit", "optionId": "lift-shadows" }
+    ],
+    "pairings": [
+      { "text": "Refinement done. Want to try a different background?", "targetStation": "setting" },
+      { "text": "Looking good. Try a different outfit to compare.", "targetStation": "style" }
+    ]
+  },
+  "looks": [
+    { "text": "Want a shortcut? Try 'Corporate' — I'll handle everything.", "lookId": "look-corporate" },
+    { "text": "The 'Creative Director' look might suit you.", "lookId": "look-creative" },
+    { "text": "Try 'Dating Ready' for something relaxed.", "lookId": "look-dating" }
+  ],
+  "variations": [
+    { "text": "Not sure? Let me show you 3 options." },
+    { "text": "Want to see what else works? I'll pick a few." }
+  ],
+  "pin": [
+    { "text": "This is good. Pin it and let's try something different." },
+    { "text": "Worth keeping. Pin this and explore more." }
+  ]
+}

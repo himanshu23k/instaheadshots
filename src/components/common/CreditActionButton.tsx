@@ -1,4 +1,4 @@
-import { Gem } from 'lucide-react'
+import { Gem, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CreditActionButtonProps {
@@ -51,7 +51,10 @@ export function CreditActionButton({
       )}
       {isFree && cost > 0 && (
         <>
-          <span className="text-ih-muted text-[12px]">No change</span>
+          <span className="flex items-center gap-1 text-ih-accent text-[12px] font-medium">
+            <Check className="w-3.5 h-3.5" />
+            Free
+          </span>
           <span className="mx-3 w-px h-4 bg-white/30" aria-hidden="true" />
         </>
       )}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "look-corporate",
+    "name": "Corporate",
+    "description": "Grey studio + navy blazer + neutral lighting",
+    "stations": ["setting", "style"],
+    "cost": 2,
+    "preview": "/mock/renders/render-01.jpg"
+  },
+  {
+    "id": "look-creative",
+    "name": "Creative Director",
+    "description": "Brick wall + turtleneck + warm editorial tones",
+    "stations": ["setting", "style", "refine"],
+    "cost": 3,
+    "preview": "/mock/renders/render-02.jpg"
+  },
+  {
+    "id": "look-dating",
+    "name": "Dating Ready",
+    "description": "Café backdrop + casual shirt + soft bokeh",
+    "stations": ["setting", "style"],
+    "cost": 2,
+    "preview": "/mock/renders/render-03.jpg"
+  },
+  {
+    "id": "look-executive",
+    "name": "Executive",
+    "description": "Dark studio + charcoal suit + dramatic lighting",
+    "stations": ["setting", "style"],
+    "cost": 2,
+    "preview": "/mock/renders/render-04.jpg"
+  },
+  {
+    "id": "look-fresh",
+    "name": "Fresh Start",
+    "description": "Outdoor park + casual fit + bright natural light",
+    "stations": ["setting", "style", "refine"],
+    "cost": 3,
+    "preview": "/mock/renders/render-05.jpg"
+  },
+  {
+    "id": "look-minimalist",
+    "name": "Minimalist",
+    "description": "White studio + clean adjustments",
+    "stations": ["setting", "refine"],
+    "cost": 2,
+    "preview": "/mock/renders/render-06.jpg"
+  }
+]

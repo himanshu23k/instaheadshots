@@ -22,7 +22,7 @@ export function OptionCard({
     <button
       onClick={() => onSelect(id)}
       className={cn(
-        'relative rounded-[var(--radius-card)] overflow-hidden cursor-pointer border-2 transition-colors aspect-[3/4] w-full',
+        'relative rounded-[var(--radius-card)] overflow-hidden cursor-pointer border-2 transition-all active:scale-[0.96] aspect-[3/4] w-full',
         selected
           ? 'border-ih-accent'
           : 'border-transparent hover:border-[#AAAAAA]',

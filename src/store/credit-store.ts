@@ -6,8 +6,9 @@ interface CreditState {
   transactions: CreditTransaction[]
 
   canAfford: (cost: number) => boolean
-  isTransformationFree: (step: StepId, optionId: string) => boolean
-  deductCredit: (step: StepId, optionId: string) => void
+  isTransformationFree: (step: StepId | string, optionId: string) => boolean
+  deductCredit: (step: StepId | string, optionId: string) => void
+  deductCredits: (step: StepId | string, optionId: string, amount: number) => void
   addCredits: (amount: number) => void
   getTotalSpent: () => number
   reset: () => void
@@ -20,7 +21,6 @@ export const useCreditStore = create<CreditState>((set, get) => ({
   canAfford: (cost) => get().balance >= cost,
 
   isTransformationFree: (step, optionId) => {
-    // Check if this exact transformation has been applied before in this session
     return get().transactions.some(
       (t) => t.step === step && t.optionId === optionId
     )
@@ -28,14 +28,26 @@ export const useCreditStore = create<CreditState>((set, get) => ({
 
   deductCredit: (step, optionId) => {
     const state = get()
-    // If already applied this exact transformation, it's free
-    if (state.isTransformationFree(step, optionId)) return
+    if (state.isTransformationFree(step as StepId, optionId)) return
 
     set({
       balance: state.balance - 1,
       transactions: [
         ...state.transactions,
-        { step, optionId, amount: 1, timestamp: Date.now() },
+        { step: step as StepId, optionId, amount: 1, timestamp: Date.now() },
+      ],
+    })
+  },
+
+  deductCredits: (step, optionId, amount) => {
+    const state = get()
+    if (amount <= 0) return
+
+    set({
+      balance: state.balance - amount,
+      transactions: [
+        ...state.transactions,
+        { step: step as StepId, optionId, amount, timestamp: Date.now() },
       ],
     })
   },

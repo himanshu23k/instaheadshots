@@ -83,6 +83,42 @@
   to { opacity: 0; }
 }
 
+/* ── v2 Studio Animations ── */
+@keyframes blur-sharpen {
+  0% { filter: blur(4px); opacity: 0.7; }
+  100% { filter: blur(0px); opacity: 1; }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes dim-brighten {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes iris-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+@keyframes particle-drift {
+  0% { transform: translateY(0) scale(1); opacity: 0.6; }
+  100% { transform: translateY(-60px) scale(0.3); opacity: 0; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes typing-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* shadcn theme inline vars (keep for component compatibility) */
 @theme inline {
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -188,4 +224,53 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── v2 Studio Focus Ring ── */
+.studio-focus-visible:focus-visible {
+  outline: 2px solid var(--color-ih-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── v2 Studio Image — kill all borders on image canvas ── */
+.studio-image-clean,
+.studio-image-clean *,
+.studio-image-clean *::before,
+.studio-image-clean *::after {
+  border-width: 0 !important;
+  border-style: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ── v2 Studio Scrollbar ── */
+.studio-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #E0DDD8 transparent;
+}
+.studio-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.studio-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.studio-scroll::-webkit-scrollbar-thumb {
+  background: #E0DDD8;
+  border-radius: 2px;
+}
+.studio-scroll::-webkit-scrollbar-thumb:hover {
+  background: #C8C5C0;
 }

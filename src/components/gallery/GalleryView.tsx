@@ -1,12 +1,12 @@
 import { Pencil, Download } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useJourneyStore } from '@/store/journey-store'
 import { CreditIndicator } from '@/components/common/CreditIndicator'
 import { Carousel3D } from './Carousel3D'
 import { ThumbnailStrip } from './ThumbnailStrip'
-import { EditModal } from './EditModal'
 
 export function GalleryView() {
-  const setShowEditModal = useJourneyStore((s) => s.setShowEditModal)
+  const navigate = useNavigate()
   const galleryImages = useJourneyStore((s) => s.galleryImages)
   const selectedIndex = useJourneyStore((s) => s.selectedImageIndex)
 
@@ -37,7 +37,7 @@ export function GalleryView() {
         {/* Action buttons */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowEditModal(true)}
+            onClick={() => navigate('/edit-v2')}
             className="flex items-center gap-2 px-6 py-2.5 border border-ih-border rounded-[var(--radius-btn)] text-[14px] font-medium text-primary-cta hover:bg-gray-50 transition-colors bg-surface"
           >
             <Pencil className="w-4 h-4" />
@@ -56,8 +56,6 @@ export function GalleryView() {
         <ThumbnailStrip />
       </div>
 
-      {/* Edit modal overlay */}
-      <EditModal />
     </div>
   )
 }
