@@ -54,6 +54,218 @@
   --animate-scale-bounce: scale-bounce 0.25s ease;
   --animate-fade-in: fade-in 0.2s ease;
   --animate-fade-out: fade-out 0.2s ease;
+
+  /* ──────────────────────────────────────────────────────────── */
+  /* Figma Design System — file key sPjNGeorOtSu1DGl9IXGSu        */
+  /* Source: design-system-tokens.md, design-system-components.md */
+  /* Note: Figma source spells neutrals as `netural` (typo). The  */
+  /* code uses the corrected `neutral`.                            */
+  /* ──────────────────────────────────────────────────────────── */
+
+  /* Primary palette */
+  --color-white: #FFFFFF;
+  --color-beige: #FBFAF8;
+  --color-midnight: #011124;
+  --color-evergreen: #003000;
+  --color-dark-green: #002100;
+  --color-faded-green: #00A36D;
+  --color-neon-green: #00EA9C;
+
+  /* Secondary palette */
+  --color-magenta: #FF356F;
+  --color-bright-blue: #19A7FF;
+  --color-yellow: #FFBE1A;
+  --color-red: #DB4848;
+  --color-orange: #FF9743;
+
+  /* Warm tones */
+  --color-beige-light: #F6F5F3;
+  --color-beige-dark: #D6CFC1;
+
+  /* Neutral scale (Figma `netural` typo corrected) */
+  --color-neutral-2: #FAFAFB;
+  --color-neutral-4: #F5F5F6;
+  --color-neutral-12: #E1E2E5;
+  --color-neutral-20: #CCCFD3;
+  --color-neutral-40: #99A0A7;
+  --color-neutral-60: #67707C;
+  --color-neutral-80: #344150;
+  --color-neutral-100: #011124;
+  --color-neutral-110: #121417;
+
+  /* Font families */
+  --font-greed: "Greed Standard VF", system-ui, sans-serif;
+  --font-momo: "Momo Signature", cursive;
+
+  /* Font weights — Greed Standard VF custom variable axis.
+     Override default Tailwind weights so `font-medium` etc. resolve to Figma values. */
+  --font-weight-light: 350;
+  --font-weight-normal: 420;
+  --font-weight-medium: 450;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font sizes (px-named so usage matches Figma values directly) */
+  --text-10: 10px;
+  --text-12: 12px;
+  --text-14: 14px;
+  --text-16: 16px;
+  --text-18: 18px;
+  --text-20: 20px;
+  --text-22: 22px;
+  --text-24: 24px;
+  --text-32: 32px;
+  --text-40: 40px;
+  --text-48: 48px;
+  --text-56: 56px;
+  --text-64: 64px;
+  --text-70: 70px;
+
+  /* Line heights */
+  --leading-12: 12px;
+  --leading-14: 14px;
+  --leading-16: 16px;
+  --leading-18: 18px;
+  --leading-20: 20px;
+  --leading-22: 22px;
+  --leading-24: 24px;
+  --leading-26: 26px;
+  --leading-28: 28px;
+  --leading-32: 32px;
+  --leading-40: 40px;
+  --leading-48: 48px;
+  --leading-56: 56px;
+  --leading-64: 64px;
+  --leading-70: 70px;
+
+  /* Spacing — only the non-default values (Tailwind v4 covers the multiples-of-4) */
+  --spacing-10: 10px;
+  --spacing-14: 14px;
+  --spacing-100: 100px;
+  --spacing-200: 200px;
+
+  /* Border radius (Figma scale; named to avoid collision with shadcn radius-sm/md/lg) */
+  --radius-fig-2: 2px;
+  --radius-fig-4: 4px;
+  --radius-fig-8: 8px;
+  --radius-fig-12: 12px;
+  --radius-fig-16: 16px;
+  --radius-fig-20: 20px;
+  --radius-fig-pill: 999px;
+
+  /* Stroke / border width */
+  --stroke-width-1: 1px;
+  --stroke-width-1_2: 1.2px;
+  --stroke-width-1_5: 1.5px;
+  --stroke-width-2: 2px;
+  --stroke-width-4: 4px;
+
+  /* Elevation / shadows */
+  --shadow-01: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
+  --shadow-02: 0 2px 8px 0 rgba(99, 99, 99, 0.20);
+  --shadow-03: 0 8px 24px 0 rgba(149, 157, 165, 0.20);
+  --shadow-04: 0 7px 29px 0 rgba(100, 100, 111, 0.20);
+  --shadow-05: 0 48px 100px 0 rgba(17, 12, 46, 0.15);
+
+  /* Breakpoints (Figma device modes: Mweb 390px, Tablet, Web 1280px) */
+  --breakpoint-mobile: 390px;
+  --breakpoint-web: 1280px;
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/* Figma semantic design tokens — mirrors tailwind.config.ts.   */
+/* Use these for all new surfaces. Existing primitives (above)  */
+/* remain for back-compat with V1/V2 components.                 */
+/* Class form: token name = `--color-<name>` → `bg-<name>`,     */
+/*   `text-<name>`, `border-<name>`, `ring-<name>`.              */
+/* ──────────────────────────────────────────────────────────── */
+@theme {
+  /* Backgrounds */
+  --color-bg-light-beige: #FBFAF8;
+  --color-bg-section: #FFFFFF;
+  --color-bg-surface-warm: #F6F5F3;
+  --color-bg-inputs: #FFFFFF;
+
+  /* Text */
+  --color-text-white: #FFFFFF;
+  --color-text-body: #011124;
+  --color-text-primary: #011124;
+  --color-text-secondary: #67707C;
+  --color-text-tertiary: #AEB3B9;
+  --color-text-beige: #D6CFC1;
+  --color-text-disabled: #FFFFFF;
+  --color-text-highlight: #00A36D;
+  --color-text-error: #DB4848;
+  --color-text-emphasis: #003000;
+
+  /* Buttons — primary */
+  --color-button-primary-default: #011124;
+  --color-button-primary-hover: #000811;
+  --color-button-primary-disabled: #B5B8BF;
+  --color-button-primary-special: #003000;
+  --color-button-primary-special-hover: #002100;
+  --color-button-primary-highlighted: #858D96;
+
+  /* Buttons — secondary */
+  --color-button-secondary-default-bg: #FFFFFF;
+  --color-button-secondary-hover-bg: #FAFAFB;
+  --color-button-secondary-default-stroke: #E7E8EA;
+  --color-button-secondary-hover-stroke: #011124;
+
+  /* Buttons — link */
+  --color-button-link-default: #00A36D;
+  --color-button-link-hover: #006846;
+
+  /* Buttons — icon */
+  --color-button-icon-black: #011124;
+  --color-button-icon-white: #FFFFFF;
+  --color-button-icon-green: #00A36D;
+  --color-button-icon-disabled: #E7E8EA;
+
+  /* Borders */
+  --color-border-primary: #E7E8EA;
+  --color-border-secondary: #011124;
+  --color-border-warm: #DAD5C9;
+  --color-border-upload-card: #C2BBAD;
+  --color-border-error: #DB4848;
+  --color-border-neon-green: #00EA9C;
+  --color-border-beige-dark: #BEB6B3;
+
+  /* Backdrop */
+  --color-backdrop-modal: rgba(1, 17, 36, 0.6);
+
+  /* Shapes */
+  --color-shapes-green: #003000;
+  --color-shapes-neon: #00EA9C;
+  --color-shapes-white: #FFFFFF;
+  --color-shapes-midnight: #011124;
+  --color-shapes-grey: #EBECED;
+  --color-shapes-carousels: #344150;
+  --color-shapes-beige: #F6F5F3;
+  --color-shapes-black: #121417;
+
+  /* Black scale */
+  --color-black-12: #E7E8EA;
+
+  /* Opacity overlays (#011124 with alpha; pre-baked) */
+  --color-opacity-30: #0111244D;
+  --color-opacity-60: #01112499;
+  --color-opacity-80: #011124CC;
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/* Greed Standard VF — drop the .woff2/.ttf files in            */
+/* /public/fonts/ then this @font-face will pick them up.       */
+/* If the font ships as multiple weight files, add one          */
+/* @font-face block per weight.                                  */
+/* ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Greed Standard VF";
+  src: url("/fonts/GreedStandardVF.woff2") format("woff2-variations"),
+       url("/fonts/GreedStandardVF.woff2") format("woff2");
+  font-weight: 350 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* Keyframes */
@@ -129,6 +341,157 @@
 @keyframes typing-cursor {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
+}
+
+/* Marquee — duplicate content twice and animate -50% for a seamless loop. */
+@keyframes marquee-left {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/* 3D embossed lift — Figma "Button — All components" hover.    */
+/* Parallelogram-shaped green "walls" at right + bottom edges.  */
+/* Pair with translate-y-[4px] translate-x-[4px] in default and */
+/* translate-x-0 translate-y-0 on hover for the lift animation.  */
+/* ──────────────────────────────────────────────────────────── */
+.btn-3d-emboss {
+  position: relative;
+}
+.btn-3d-emboss::before,
+.btn-3d-emboss::after {
+  content: '';
+  position: absolute;
+  background: #00b67a;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  pointer-events: none;
+}
+.btn-3d-emboss::before {
+  /* Right wall — parallelogram from (W,0) to (W+4,4) to (W+4,H+4) to (W,H) */
+  top: 0;
+  left: 100%;
+  width: 4px;
+  height: calc(100% + 4px);
+  clip-path: polygon(0 0, 100% 4px, 100% 100%, 0 calc(100% - 4px));
+}
+.btn-3d-emboss::after {
+  /* Bottom wall — parallelogram from (0,H) to (W,H) to (W+4,H+4) to (4,H+4) */
+  top: 100%;
+  left: 0;
+  width: calc(100% + 4px);
+  height: 4px;
+  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 100%, 4px 100%);
+}
+.btn-3d-emboss:hover::before,
+.btn-3d-emboss:hover::after,
+.btn-3d-emboss:focus-visible::before,
+.btn-3d-emboss:focus-visible::after {
+  opacity: 1;
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/* Figma typography utilities                                    */
+/* Usage: <h1 class="heading-1">…</h1>                           */
+/* The /W and /M Figma variants collapse into one responsive     */
+/* class — base = mobile, web: prefix = desktop.                 */
+/* ──────────────────────────────────────────────────────────── */
+
+/* Heading 1 — mobile 22/24, web 24/28 */
+@utility heading-1 {
+  font-family: var(--font-greed);
+  font-size: 22px;
+  font-weight: 450;
+  line-height: 24px;
+  letter-spacing: 0;
+  @media (min-width: 1280px) {
+    font-size: 24px;
+    line-height: 28px;
+  }
+}
+
+/* Heading 2 — mobile 18/20, web 20/22 */
+@utility heading-2 {
+  font-family: var(--font-greed);
+  font-size: 18px;
+  font-weight: 450;
+  line-height: 20px;
+  letter-spacing: 0;
+  @media (min-width: 1280px) {
+    font-size: 20px;
+    line-height: 22px;
+  }
+}
+
+/* Subheading 1 — 18/24 */
+@utility subheading-1-r {
+  font-family: var(--font-greed);
+  font-size: 18px;
+  font-weight: 420;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+@utility subheading-1-m {
+  font-family: var(--font-greed);
+  font-size: 18px;
+  font-weight: 450;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+/* Subheading 2 — 18/22 (per Figma type-style table; Body/L is the 16/20 step) */
+@utility subheading-2-r {
+  font-family: var(--font-greed);
+  font-size: 18px;
+  font-weight: 420;
+  line-height: 22px;
+  letter-spacing: 0;
+}
+
+@utility subheading-2-m {
+  font-family: var(--font-greed);
+  font-size: 18px;
+  font-weight: 450;
+  line-height: 22px;
+  letter-spacing: 0;
+}
+
+/* Body */
+@utility body-l {
+  font-family: var(--font-greed);
+  font-size: 16px;
+  font-weight: 420;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+
+@utility body-m {
+  font-family: var(--font-greed);
+  font-size: 14px;
+  font-weight: 420;
+  line-height: 18px;
+  letter-spacing: 0;
+}
+
+@utility body-s {
+  font-family: var(--font-greed);
+  font-size: 12px;
+  font-weight: 420;
+  line-height: 14px;
+  letter-spacing: 0;
+}
+
+@utility body-xs {
+  font-family: var(--font-greed);
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 12px;
+  letter-spacing: 0;
 }
 
 /* shadcn theme inline vars (keep for component compatibility) */

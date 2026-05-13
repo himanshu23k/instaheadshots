@@ -3,7 +3,28 @@
     "allow": [
       "Bash(npm create:*)",
       "Bash(cp -r \"f:/Code/instaheadshots-temp/\"* \"f:/Code/instaheadshots-temp/\".* \"f:/Code/Instaheadshots/\")",
-      "Bash(rm -rf \"f:/Code/instaheadshots-temp\")"
+      "Bash(rm -rf \"f:/Code/instaheadshots-temp\")",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//usr/local/**)",
+      "Bash(npm -v)",
+      "Read(//Users/himanshu/.nvm/versions/node/**)",
+      "Read(//Users/himanshu/.nvm/**)",
+      "Read(//Users/himanshu/**)",
+      "Bash(export PATH=\"$HOME/.nvm/versions/node/v24.15.0/bin:$PATH\")",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\nbytes=%{size_download}\\\\n\" http://localhost:5173/home)",
+      "Bash(npx eslint *)",
+      "Bash(uipro --version)",
+      "Bash(npx --no-install uipro --version)",
+      "Bash(npm search *)",
+      "Bash(npx -y uipro-cli init --ai claude)",
+      "Bash(git -C /Users/himanshu/Documents/CODE/IH/instaheadshots status --short)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5173/home)",
+      "Bash(curl -s -o /dev/null -w \"face01 HTTP %{http_code}\\\\n\" http://localhost:5173/mock/faces/face-01.jpg)",
+      "Bash(curl -s -o /dev/null -w \"logo HTTP %{http_code}\\\\n\" http://localhost:5173/logo-horizontal.svg)"
     ]
   }
 }
