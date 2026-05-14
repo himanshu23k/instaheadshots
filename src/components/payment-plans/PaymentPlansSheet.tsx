@@ -245,7 +245,7 @@ function PremiumCard({ discountOn }: { discountOn: boolean }) {
 
             <div className="bg-white px-2 py-0.5">
               <span className="text-[11px] leading-[16px] tracking-[0.88px] uppercase text-[#003000] whitespace-pre">
-                {'47% OFF  + 10% EXTRA'}
+                {discountOn ? '47% OFF  + 10% EXTRA' : '47% OFF'}
               </span>
             </div>
           </div>
