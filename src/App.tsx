@@ -14,6 +14,7 @@ import { MagicEraser } from '@/components/steps/MagicEraser'
 import { StudioShell } from '@/components/v2/StudioShell'
 import { HomePage } from '@/components/home/HomePage'
 import { PaymentPlansSheet } from '@/components/payment-plans/PaymentPlansSheet'
+import { UpsellPage } from '@/components/noor/upsell/UpsellPage'
 import type { StepId } from '@/types'
 
 const STEP_COMPONENTS: Record<StepId, React.ComponentType> = {
@@ -62,6 +63,7 @@ function App() {
         <Route path="/edit-v2" element={<StudioShell />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/payment-plans" element={<PaymentPlansSheet />} />
+        <Route path="/noor/upsell" element={<UpsellPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </TooltipProvider>
