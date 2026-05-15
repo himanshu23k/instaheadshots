@@ -37,8 +37,6 @@ const TOP_PAD = 20
 const BOTTOM_PAD = 16
 // Left snap inset (matches pl-4 on the scroll container).
 const SNAP_LEFT = 16
-// Gap between cards.
-const GAP = 12
 
 interface UpsellV1SectionProps {
   cards?: CarouselCard[]
