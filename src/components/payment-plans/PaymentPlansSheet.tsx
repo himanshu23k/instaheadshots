@@ -1375,21 +1375,19 @@ function FooterCTA({
           ) : (
             <motion.div
               key={`${leftLabel}|${rightLabel}`}
-              className="overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              className="flex items-center"
+              initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+              transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
             >
-              <div className="flex items-center">
-                {leftLabel && (
-                  <>
-                    <span className="text-[16px] leading-[22px]">{leftLabel}</span>
-                    <span className="text-[16px] leading-[22px] text-white/30 mx-2">|</span>
-                  </>
-                )}
-                <span className="text-[16px] leading-[22px]">{rightLabel}</span>
-              </div>
+              {leftLabel && (
+                <>
+                  <span className="text-[16px] leading-[22px]">{leftLabel}</span>
+                  <span className="text-[16px] leading-[22px] text-white/30 mx-2">|</span>
+                </>
+              )}
+              <span className="text-[16px] leading-[22px]">{rightLabel}</span>
             </motion.div>
           )}
         </AnimatePresence>
