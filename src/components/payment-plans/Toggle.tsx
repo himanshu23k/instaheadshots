@@ -35,9 +35,10 @@ export function Toggle({ checked, onChange, ariaLabel, className }: ToggleProps)
     >
       <span
         className={cn(
-          'block size-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+          'block size-4 rounded-full bg-white transition-transform duration-200',
           checked ? 'translate-x-5' : 'translate-x-0',
         )}
+        style={{ boxShadow: '0px 2px 8px rgba(0,0,0,0.22), 0px 0.5px 2px rgba(0,0,0,0.12)' }}
       />
     </button>
   )

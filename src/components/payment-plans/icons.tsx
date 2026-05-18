@@ -143,3 +143,58 @@ export function CrossIcon({ size = 14, color = '#011124' }: { size?: number; col
     </svg>
   )
 }
+
+/** Stylised "SD" badge — Standard resolution icon. */
+export function IconSD({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Shadow depth layer */}
+      <rect x="8" y="13" width="50" height="42" rx="2" fill="#001508" />
+      {/* Green oval accent behind "D" */}
+      <ellipse cx="42" cy="31" rx="14" ry="15" fill="#00A36D" />
+      {/* Main card surface */}
+      <rect x="6" y="9" width="50" height="42" rx="2" fill="#0B1D2E" />
+      {/* S — muted */}
+      <text x="21" y="38" textAnchor="middle" fill="#7A8A94" fontSize="26" fontWeight="800" fontFamily="system-ui, sans-serif">S</text>
+      {/* D — white */}
+      <text x="43" y="38" textAnchor="middle" fill="white" fontSize="26" fontWeight="800" fontFamily="system-ui, sans-serif">D</text>
+    </svg>
+  )
+}
+
+/** Stylised "03" badge — Select 3 headshots icon. */
+export function Icon03({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Shadow depth layer */}
+      <rect x="8" y="13" width="50" height="42" rx="2" fill="#001508" />
+      {/* Green oval accent behind "0" */}
+      <ellipse cx="22" cy="31" rx="14" ry="15" fill="#00A36D" />
+      {/* Main card surface */}
+      <rect x="6" y="9" width="50" height="42" rx="2" fill="#0B1D2E" />
+      {/* 0 — white */}
+      <text x="22" y="38" textAnchor="middle" fill="white" fontSize="26" fontWeight="800" fontFamily="system-ui, sans-serif">0</text>
+      {/* 3 — muted */}
+      <text x="44" y="38" textAnchor="middle" fill="#7A8A94" fontSize="26" fontWeight="800" fontFamily="system-ui, sans-serif">3</text>
+    </svg>
+  )
+}
+
+/** No-credits badge — diamond outline with prohibition slash. */
+export function IconNoCredits({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Shadow hex */}
+      <path d="M32 9L55 22V42L32 55L9 42V22Z" fill="#001508" transform="translate(0 3)" />
+      {/* Green hex accent */}
+      <path d="M32 9L55 22V42L32 55L9 42V22Z" fill="#00A36D" />
+      {/* Dark main surface */}
+      <path d="M32 11L53 23.5V40.5L32 53L11 40.5V23.5Z" fill="#0B1D2E" />
+      {/* Gem wireframe — diamond + midline */}
+      <path d="M32 19L44 29L32 39L20 29Z" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" fill="none" />
+      <line x1="20" y1="29" x2="44" y2="29" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" />
+      {/* Prohibition slash */}
+      <line x1="19" y1="43" x2="45" y2="17" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  )
+}
