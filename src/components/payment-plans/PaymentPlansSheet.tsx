@@ -246,6 +246,11 @@ export function PaymentPlansSheet() {
     }, 500)
   }
 
+  const handleSkipPay = () => {
+    setDiscountOn(false)
+    setView('payment')
+  }
+
   const handleCTA = () => {
     if (view === 'select') {
       if (selectedPackId === 'premium' && discountOn) {
@@ -313,20 +318,31 @@ export function PaymentPlansSheet() {
                 animate={{ opacity: fadeOut ? 0 : 1 }}
                 transition={fadeOut ? { duration: 0.18, ease: 'easeOut' } : { duration: 0 }}
                 className={cn(
-                  visibleView === 'invite' && 'px-6 pb-4',
+                  visibleView === 'invite' && 'px-6 pb-[174px]',
                   visibleView !== 'invite' && visibleView !== 'unlocked' && 'px-6 pb-6',
                 )}
               >
                 {visibleView !== 'unlocked' && (
-                  <div className="flex items-center justify-end mb-4">
-                    <button
-                      type="button"
-                      onClick={triggerClose}
-                      className="inline-flex size-5 items-center justify-center text-text-primary"
-                      aria-label="Close"
-                    >
-                      <X className="size-5" strokeWidth={1.5} />
-                    </button>
+                  <div className={cn('flex items-center mb-4', visibleView === 'invite' ? 'justify-start' : 'justify-end')}>
+                    {visibleView === 'invite' ? (
+                      <button
+                        type="button"
+                        onClick={() => setView('select')}
+                        className="inline-flex size-5 items-center justify-center text-text-primary"
+                        aria-label="Back"
+                      >
+                        <img src="/arrow-left.svg" alt="" className="size-5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={triggerClose}
+                        className="inline-flex size-5 items-center justify-center text-text-primary"
+                        aria-label="Close"
+                      >
+                        <X className="size-5" strokeWidth={1.5} />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -369,7 +385,7 @@ export function PaymentPlansSheet() {
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
                   className="absolute inset-x-6 z-10 overflow-hidden"
-                  style={{ bottom: 72 }}
+                  style={{ bottom: 174 }}
                 >
                   <InviteToast toastKey={toastKey} onDismiss={() => setToastVisible(false)} />
                 </motion.div>
@@ -390,6 +406,7 @@ export function PaymentPlansSheet() {
                   emailValidity.some((v) => v === 'valid-editable')
                 }
                 onClick={handleCTA}
+                onSkipPay={handleSkipPay}
               />
             )}
             </Drawer.Content>
@@ -519,14 +536,14 @@ function DiscountToggleCard({
 }) {
   return (
     <div
-      className="relative flex items-center justify-between overflow-hidden p-3"
+      className="relative flex items-center justify-between overflow-hidden px-4 py-[10px]"
       style={{
         borderRadius: 0,
         background: 'linear-gradient(90deg, #90FBD6 0%, #BCF1C2 42.35%, #C8F9E8 100%)',
         backdropFilter: 'blur(3px)',
-        borderTop: '0.5px solid #c2f5e3',
-        borderLeft: '0.5px solid #c2f5e3',
-        borderRight: '0.5px solid #c2f5e3',
+        borderTop: '2px solid #a9f2cc',
+        borderLeft: '2px solid #a9f2cc',
+        borderRight: '2px solid #a9f2cc',
       }}
     >
       {/* Diagonal hatch pattern fading in from top-right corner */}
@@ -545,19 +562,19 @@ function DiscountToggleCard({
         animate={{ x: ['-100%', '150%'] }}
         transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2 }}
       />
-      <div className="flex min-w-0 flex-col gap-0.5">
+      <div className="flex min-w-0 flex-col gap-1">
         <p
           style={{
             color: '#003000',
-            fontSize: '14px',
+            fontSize: '16px',
             fontWeight: 500,
-            lineHeight: '16px',
+            lineHeight: '18px',
             fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on",
           }}
         >
           Get an extra 25% off Premium
         </p>
-        <p className="text-[12px] leading-[16px] text-[rgba(11,110,75,0.8)]">
+        <p className="text-[14px] leading-[18px] text-[rgba(0,48,0,0.8)]">
           Invite 3 coworkers to unlock
         </p>
       </div>
@@ -776,7 +793,7 @@ function NonPremiumCardExpanded({ id }: { id: 'standard' | 'starter' }) {
   const pack = PACK_DATA[id]
   return (
     <div className="bg-[#011124] text-white p-4 flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <p className="text-[16px] leading-[22px] text-white">{pack.name}</p>
         <div className="flex items-end gap-1">
           {id === 'standard' && (
@@ -832,9 +849,9 @@ function PackageCard({
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left bg-white border border-[#e1e2e5]"
+      className="w-full text-left bg-white border border-[#e1e2e5] flex flex-col gap-4"
     >
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+      <div className="px-4 pt-4 flex flex-col gap-3">
         <p className="text-[16px] leading-[20px] text-text-primary">{name}</p>
         <div className="flex items-baseline gap-1 text-text-primary">
           <span className="text-[20px] leading-[22px]">₹{price.toLocaleString('en-IN')}</span>
@@ -993,7 +1010,8 @@ function InviteView({
                 readOnly={locked}
                 onChange={(e) => !locked && onEmailChange(i, e.target.value)}
                 className={cn(
-                  'h-[40px] w-full border px-3 pr-10 text-[16px] leading-[22px] outline-none transition-colors duration-150',
+                  'h-[40px] w-full border px-3 text-[16px] leading-[22px] outline-none transition-colors duration-150',
+                  (v === 'loading' || v === 'invalid' || v === 'valid-locked') && 'pr-10',
                   'placeholder:text-[#99a0a7]',
                   locked
                     ? 'bg-[#f5f5f6] border-transparent text-[#011124] cursor-default'
@@ -1012,7 +1030,7 @@ function InviteView({
               {v === 'invalid' && (
                 <img src="/error-icon.png" alt="" className="absolute right-3 top-1/2 -translate-y-1/2 size-4" />
               )}
-              {(v === 'valid-editable' || v === 'valid-locked') && (
+              {v === 'valid-locked' && (
                 <img src="/check.svg" alt="" className="absolute right-3 top-1/2 -translate-y-1/2 size-4" />
               )}
             </div>
@@ -1071,20 +1089,6 @@ function InviteView({
         <div style={{ height: '1px', backgroundImage: 'repeating-linear-gradient(to right, #E1E2E5 0, #E1E2E5 4px, transparent 4px, transparent 12px)' }} />
       </motion.div>
 
-      <motion.p
-        variants={staggerItem}
-        style={{
-          color: '#67707C',
-          fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on",
-          fontFamily: '"Greed Standard VF", sans-serif',
-          fontSize: '16px',
-          fontStyle: 'normal',
-          fontWeight: 420,
-          lineHeight: '22px',
-        }}
-      >
-        Discount will be applicable for the next 30 minutes.
-      </motion.p>
     </motion.div>
   )
 }
@@ -1316,6 +1320,7 @@ function FooterCTA({
   sendPhase,
   emailsReady,
   onClick,
+  onSkipPay,
 }: {
   view: View
   selectedPackId: PackId
@@ -1324,6 +1329,7 @@ function FooterCTA({
   sendPhase: SendPhase
   emailsReady: boolean
   onClick: () => void
+  onSkipPay: () => void
 }) {
   let leftLabel = `₹${currentPackPrice.toLocaleString('en-IN')}`
   let rightLabel = 'Pay to Continue'
@@ -1342,7 +1348,13 @@ function FooterCTA({
   const isSending = view === 'invite' && sendPhase === 'sending'
 
   return (
-    <div className="shrink-0 px-6 pb-3">
+    <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col px-6 py-3 bg-white">
+      {view === 'invite' && (
+        <p className="mb-4 text-[16px] leading-[22px] text-[#67707C]" style={{ fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on" }}>
+          Discount will be applicable for the next 30 minutes.
+        </p>
+      )}
+      <div className="flex flex-col gap-2">
       <button
         type="button"
         onClick={onClick}
@@ -1392,6 +1404,19 @@ function FooterCTA({
           )}
         </AnimatePresence>
       </button>
+
+      {view === 'invite' && (
+        <button
+          type="button"
+          onClick={onSkipPay}
+          className="flex h-11 w-full items-center justify-center px-6 border border-[#e1e2e5] text-text-primary transition-colors hover:bg-[#f5f5f6] active:translate-y-px"
+        >
+          <span className="text-[16px] leading-[22px]">₹{PREMIUM_PRICE.toLocaleString('en-IN')}</span>
+          <span className="text-[16px] leading-[22px] text-[rgba(1,17,36,0.3)] mx-2">|</span>
+          <span className="text-[16px] leading-[22px]">Skip & Pay</span>
+        </button>
+      )}
+      </div>
     </div>
   )
 }
