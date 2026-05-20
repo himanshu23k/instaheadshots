@@ -93,6 +93,8 @@ export function PaymentPlansSheet() {
   const unlockDiscount = useReferralStore((s) => s.unlockDiscount)
   const markPaid = useReferralStore((s) => s.markPaid)
   const resetDiscount = useReferralStore((s) => s.resetDiscount)
+  const setPartialInviteCount = useReferralStore((s) => s.setPartialInviteCount)
+  const partialInviteCount = useReferralStore((s) => s.partialInviteCount)
   const { discountUnlocked, secondsRemaining } = useReferralStatus()
 
   // If discount already unlocked (returning user), drop straight to payment
@@ -327,7 +329,13 @@ export function PaymentPlansSheet() {
                     {visibleView === 'invite' ? (
                       <button
                         type="button"
-                        onClick={() => setView('select')}
+                        onClick={() => {
+                          if (sendPhase === 'done-with-error') {
+                            const count = emailValidity.filter((v) => v === 'valid-locked').length
+                            setPartialInviteCount(count > 0 ? count : null)
+                          }
+                          setView('select')
+                        }}
                         className="inline-flex size-5 items-center justify-center text-text-primary"
                         aria-label="Back"
                       >
@@ -352,6 +360,7 @@ export function PaymentPlansSheet() {
                     onSelectPack={setSelectedPackId}
                     discountOn={discountOn}
                     onToggleDiscount={setDiscountOn}
+                    partialInviteCount={partialInviteCount}
                   />
                 )}
                 {visibleView === 'invite' && (
@@ -425,14 +434,16 @@ function SelectView({
   onSelectPack,
   discountOn,
   onToggleDiscount,
+  partialInviteCount,
 }: {
   selectedPackId: PackId
   onSelectPack: (id: PackId) => void
   discountOn: boolean
   onToggleDiscount: (v: boolean) => void
+  partialInviteCount: number | null
 }) {
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col gap-8 h-[calc(100dvh-180px)] overflow-y-auto">
+    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col gap-8 h-[calc(100dvh-124px)] overflow-y-auto">
       <motion.header variants={staggerItem} className="flex flex-col gap-3">
         <h1 className="text-[24px] leading-[28px] font-medium text-text-primary">
           Select a pack
@@ -442,10 +453,10 @@ function SelectView({
         </p>
       </motion.header>
 
-      <motion.div variants={staggerItem} className="flex flex-col gap-4">
+      <motion.div variants={staggerItem} className="flex flex-col gap-4 pb-[84px]">
           {/* Premium section — both expanded and collapsed always mounted, height animates */}
           <div className="flex flex-col">
-            <DiscountToggleCard checked={discountOn} onChange={onToggleDiscount} />
+            <DiscountToggleCard checked={discountOn} onChange={onToggleDiscount} partialInviteCount={partialInviteCount} />
             <motion.div
               initial={false}
               animate={{
@@ -526,63 +537,109 @@ function SelectView({
   )
 }
 
+const CONFETTI_PARTICLES = [
+  { id: 0,  dx: -55, dy: -30, color: '#00EA9C', w: 6, h: 3, rot: 45 },
+  { id: 1,  dx: -32, dy:  28, color: '#FFFFFF',  w: 3, h: 5, rot: -30 },
+  { id: 2,  dx: -72, dy: -18, color: '#90FBD6',  w: 5, h: 4, rot: 20 },
+  { id: 3,  dx: -22, dy: -48, color: '#00A36D',  w: 4, h: 4, rot: 60 },
+  { id: 4,  dx: -62, dy:  30, color: '#BCF1C2',  w: 6, h: 3, rot: -45 },
+  { id: 5,  dx:  18, dy: -36, color: '#FFFFFF',  w: 3, h: 5, rot: 15 },
+  { id: 6,  dx: -42, dy:  42, color: '#00EA9C',  w: 5, h: 3, rot: -60 },
+  { id: 7,  dx:  20, dy:  24, color: '#90FBD6',  w: 4, h: 6, rot: 30 },
+  { id: 8,  dx: -85, dy:   8, color: '#00EA9C',  w: 4, h: 4, rot: -20 },
+  { id: 9,  dx: -14, dy:  46, color: '#FFFFFF',  w: 5, h: 3, rot: 45 },
+  { id: 10, dx: -58, dy: -46, color: '#BCF1C2',  w: 6, h: 4, rot: -15 },
+  { id: 11, dx:  26, dy: -26, color: '#00A36D',  w: 3, h: 5, rot: 70 },
+]
+
 /* Discount toggle banner */
 function DiscountToggleCard({
   checked,
   onChange,
+  partialInviteCount,
 }: {
   checked: boolean
   onChange: (v: boolean) => void
+  partialInviteCount: number | null
 }) {
+  const [confettiActive, setConfettiActive] = useState(false)
+  const hasConfettiedRef = useRef(false)
+
+  const handleChange = (v: boolean) => {
+    if (v && !hasConfettiedRef.current) {
+      hasConfettiedRef.current = true
+      setConfettiActive(true)
+      setTimeout(() => setConfettiActive(false), 700)
+    }
+    onChange(v)
+  }
+
   return (
-    <div
-      className="relative flex items-center justify-between overflow-hidden px-4 py-[10px]"
-      style={{
-        borderRadius: 0,
-        background: 'linear-gradient(90deg, #90FBD6 0%, #BCF1C2 42.35%, #C8F9E8 100%)',
-        backdropFilter: 'blur(3px)',
-        borderTop: '2px solid #a9f2cc',
-        borderLeft: '2px solid #a9f2cc',
-        borderRight: '2px solid #a9f2cc',
-      }}
-    >
-      {/* Diagonal hatch pattern fading in from top-right corner */}
+    <div className="relative">
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-32"
+        className="relative flex items-center justify-between overflow-hidden px-4 py-[10px]"
         style={{
-          backgroundImage: 'repeating-linear-gradient(-45deg, rgba(11,110,75,0.18) 0px, rgba(11,110,75,0.18) 1.5px, transparent 1.5px, transparent 9px)',
-          maskImage: 'linear-gradient(to left, black 10%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to left, black 10%, transparent 100%)',
+          borderRadius: 0,
+          background: 'linear-gradient(90deg, #90FBD6 0%, #BCF1C2 42.35%, #C8F9E8 100%)',
+          backdropFilter: 'blur(3px)',
+          borderTop: '2px solid #a9f2cc',
+          borderLeft: '2px solid #a9f2cc',
+          borderRight: '2px solid #a9f2cc',
         }}
-      />
-      {/* Shimmer sweep every 3 s */}
-      <motion.div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%)' }}
-        animate={{ x: ['-100%', '150%'] }}
-        transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2 }}
-      />
-      <div className="flex min-w-0 flex-col gap-1">
-        <p
+      >
+        {/* Diagonal hatch pattern fading in from top-right corner */}
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-32"
           style={{
-            color: '#003000',
-            fontSize: '16px',
-            fontWeight: 500,
-            lineHeight: '18px',
-            fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on",
+            backgroundImage: 'repeating-linear-gradient(-45deg, rgba(11,110,75,0.18) 0px, rgba(11,110,75,0.18) 1.5px, transparent 1.5px, transparent 9px)',
+            maskImage: 'linear-gradient(to left, black 10%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to left, black 10%, transparent 100%)',
           }}
-        >
-          Get an extra 25% off Premium
-        </p>
-        <p className="text-[14px] leading-[18px] text-[rgba(0,48,0,0.8)]">
-          Invite 3 coworkers to unlock
-        </p>
+        />
+        {/* Shimmer sweep every 3 s */}
+        <motion.div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%)' }}
+          animate={{ x: ['-100%', '150%'] }}
+          transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2 }}
+        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <p
+            style={{
+              color: '#003000',
+              fontSize: '16px',
+              fontWeight: 500,
+              lineHeight: '18px',
+              fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on",
+            }}
+          >
+            Get an extra 25% off Premium
+          </p>
+          <p className="text-[14px] leading-[18px] text-[rgba(0,48,0,0.8)]">
+            {partialInviteCount != null ? `${partialInviteCount}/3 invited` : 'Invite 3 coworkers to unlock'}
+          </p>
+        </div>
+        <Toggle
+          checked={checked}
+          onChange={handleChange}
+          ariaLabel="Toggle extra 25% off discount"
+        />
       </div>
-      <Toggle
-        checked={checked}
-        onChange={onChange}
-        ariaLabel="Toggle extra 25% off discount"
-      />
+
+      {/* Confetti burst from behind the toggle — fires once on first toggle-on */}
+      <AnimatePresence>
+        {confettiActive && CONFETTI_PARTICLES.map((p) => (
+          <motion.div
+            key={p.id}
+            className="pointer-events-none absolute"
+            style={{ right: 36, top: 30, width: p.w, height: p.h, backgroundColor: p.color, borderRadius: 1, zIndex: 10 }}
+            initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 }}
+            animate={{ x: p.dx, y: p.dy, opacity: 0, rotate: p.rot, scale: 0.3 }}
+            exit={{}}
+            transition={{ duration: 0.65, ease: [0.2, 0, 0.5, 1], delay: p.id * 0.015 }}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
