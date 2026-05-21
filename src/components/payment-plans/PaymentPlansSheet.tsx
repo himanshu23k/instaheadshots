@@ -353,11 +353,15 @@ export function PaymentPlansSheet() {
   const topChrome =
     visibleView === 'payment' && discountUnlocked ? (
       <div className="shrink-0 bg-[#fee2e2] px-4 py-3 text-center">
-        <span style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px' }}>
+        <motion.span
+          style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px', display: 'inline-block', transformOrigin: 'center' }}
+          animate={gracePeriodActive ? { scale: [1, 1.09, 1, 1.05, 1] } : { scale: 1 }}
+          transition={gracePeriodActive ? { duration: 4, ease: 'easeInOut', repeat: Infinity, times: [0, 0.0625, 0.125, 0.1875, 1] } : { duration: 0 }}
+        >
           {gracePeriodActive
             ? 'Last chance! Get Premium at ₹3,999'
             : `Extra 25% off expires in ${formatCountdown(secondsRemaining)} mins`}
-        </span>
+        </motion.span>
       </div>
     ) : visibleView !== 'unlocked' && !isDesktop ? (
       <div className="shrink-0 flex justify-center pt-4 pb-1">
@@ -585,11 +589,15 @@ function SelectView({
           <div className="md:col-start-1 md:row-start-1">
             {discountUnlocked ? (
               <div className="flex w-full items-center justify-center bg-[#fee2e2] px-4 py-2 h-[62px]">
-                <span style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px' }}>
+                <motion.span
+                  style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px', display: 'inline-block', transformOrigin: 'center' }}
+                  animate={gracePeriodActive ? { scale: [1, 1.09, 1, 1.05, 1] } : { scale: 1 }}
+                  transition={gracePeriodActive ? { duration: 4, ease: 'easeInOut', repeat: Infinity, times: [0, 0.0625, 0.125, 0.1875, 1] } : { duration: 0 }}
+                >
                   {gracePeriodActive
                     ? 'Last chance! Get Premium at ₹3,999'
                     : `Extra 25% off expires in ${formatCountdown(secondsRemaining)} mins`}
-                </span>
+                </motion.span>
               </div>
             ) : (
               <DiscountToggleCard checked={discountOn} onChange={onToggleDiscount} partialInviteCount={partialInviteCount} />

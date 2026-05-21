@@ -104,11 +104,15 @@ export function ReferralPre() {
         onClick={() => openPlans('payment')}
         className="flex w-full cursor-pointer items-center justify-center bg-[#fee2e2] px-4 py-2"
       >
-        <span style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px' }}>
+        <motion.span
+          style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px', display: 'inline-block', transformOrigin: 'center' }}
+          animate={gracePeriodActive ? { scale: [1, 1.09, 1, 1.05, 1] } : { scale: 1 }}
+          transition={gracePeriodActive ? { duration: 4, ease: 'easeInOut', repeat: Infinity, times: [0, 0.0625, 0.125, 0.1875, 1] } : { duration: 0 }}
+        >
           {gracePeriodActive
             ? 'Last chance! Get Premium at ₹3,999'
             : `Get Premium at ${formattedDiscountPrice} for ${formatCountdown(secondsRemaining)}`}
-        </span>
+        </motion.span>
       </div>
     )
 
