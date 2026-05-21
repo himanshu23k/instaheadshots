@@ -180,6 +180,34 @@ export function Icon03({ size = 64 }: { size?: number }) {
   )
 }
 
+/** SD badge — light/outline variant for non-selected (light theme) cards. */
+export function IconSDLight({ size = 64 }: { size?: number }) {
+  return (
+    <img
+      src="/payment-plans/badge-4sd.png"
+      alt="SD"
+      width={size}
+      height={size}
+      className="block select-none"
+      draggable={false}
+    />
+  )
+}
+
+/** Stylised "03" badge — light/outline variant for non-selected (light theme) cards. */
+export function Icon03Light({ size = 64 }: { size?: number }) {
+  return (
+    <img
+      src="/payment-plans/badge-03.png"
+      alt="03"
+      width={size}
+      height={size}
+      className="block select-none"
+      draggable={false}
+    />
+  )
+}
+
 /** No-credits badge — diamond outline with prohibition slash. */
 export function IconNoCredits({ size = 64 }: { size?: number }) {
   return (
@@ -196,5 +224,19 @@ export function IconNoCredits({ size = 64 }: { size?: number }) {
       {/* Prohibition slash */}
       <line x1="19" y1="43" x2="45" y2="17" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
+  )
+}
+
+/** No-credits badge — light/outline variant for non-selected (light theme) cards. */
+export function IconNoCreditsLight({ size = 64 }: { size?: number }) {
+  return (
+    <img
+      src="/payment-plans/badge-no-creds.png"
+      alt="No credits"
+      width={size}
+      height={size}
+      className="block select-none"
+      draggable={false}
+    />
   )
 }

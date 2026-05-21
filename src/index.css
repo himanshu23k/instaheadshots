@@ -261,8 +261,8 @@
 /* ──────────────────────────────────────────────────────────── */
 @font-face {
   font-family: "Greed Standard VF";
-  src: url("/fonts/GreedStandardVF.woff2") format("woff2-variations"),
-       url("/fonts/GreedStandardVF.woff2") format("woff2");
+  src: url("/fonts/GreedStandardVF.ttf") format("truetype-variations"),
+       url("/fonts/GreedStandardVF.ttf") format("truetype");
   font-weight: 350 700;
   font-style: normal;
   font-display: swap;

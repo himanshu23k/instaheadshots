@@ -27,22 +27,22 @@ export function PremiumPill() {
   return (
     <div className="flex justify-center">
       <div className="relative flex items-center gap-1 px-3 py-1.5 rounded-full border border-[#aeffde] overflow-hidden">
-        {/* gradient fill */}
+        {/* Two stacked gradient layers per Figma 216:3612 */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background:
-              'linear-gradient(90deg, #ddfff4 0%, #69ffcd 50%, #ddfff4 100%)',
+            backgroundImage:
+              'linear-gradient(90deg, #ddfff4 0%, #69ffcd 50%, #ddfff4 100%), linear-gradient(95.91deg, rgba(0,255,170,0.32) -37.04%, rgba(205,250,235,0.32) 101.27%)',
           }}
         />
         <div className="absolute inset-[-1px] rounded-full pointer-events-none shadow-[inset_0px_-4px_8px_0px_rgba(5,182,43,0.12),inset_0px_4px_8px_0px_rgba(255,255,255,0.24)]" />
         <Star
-          size={14}
+          size={16}
           className="relative text-[var(--color-text-emphasis)] fill-[var(--color-text-emphasis)] shrink-0"
         />
         <span
           className="relative text-[12px] leading-[14px] text-[var(--color-text-emphasis)] whitespace-nowrap"
-          style={{ fontFamily: 'var(--font-greed)' }}
+          style={{ fontFamily: 'var(--font-greed)', fontWeight: 450 }}
         >
           Top Premium feature
         </span>
@@ -72,13 +72,50 @@ export function UpsellHeading() {
 }
 
 // ── 4K comparison card ────────────────────────────────────────────────────────
-export function FourKCard() {
+// max-w defaults to the V1 row's 3 × DESKTOP_MAX_CARD + 2 × DESKTOP_GAP (320·3 + 16·2 = 992);
+// callers can override via maxContentWidth to track a dynamically-sized row.
+interface FourKCardProps {
+  maxContentWidth?: number | null
+}
+
+export function FourKCard({ maxContentWidth }: FourKCardProps = {}) {
+  const widthStyle =
+    typeof maxContentWidth === 'number' && maxContentWidth > 0
+      ? { maxWidth: `${maxContentWidth}px` }
+      : undefined
   return (
-    <div className="mx-4 relative border border-[var(--color-border-primary)] overflow-hidden">
-      {/* tinted background */}
-      <div className="absolute inset-0 bg-[#f3fcff]" />
-      <div className="absolute inset-0 bg-white/56 mix-blend-multiply" />
-      <div className="absolute inset-0 shadow-[inset_0px_-8px_32px_0px_rgba(255,234,97,0.12),inset_0px_8px_12px_0px_rgba(255,255,255,0.24)] pointer-events-none" />
+    <div className="px-4">
+      <div
+        className="mx-auto max-w-[992px] relative border border-[#E1E2E5] overflow-hidden"
+        style={{
+          ...widthStyle,
+          background:
+            'linear-gradient(0deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.56)), #F3FCFF',
+          backgroundBlendMode: 'multiply, normal',
+          boxShadow:
+            'inset 0px -8px 32px rgba(255, 234, 97, 0.12), inset 0px 8px 12px rgba(255, 255, 255, 0.24)',
+        }}
+      >
+      {/* warm radial glow (Figma 216:3627 "shadow") — clipped by the card */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-[-120px] top-[-154px] size-[245px]"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(255,234,97,0.55) 0%, rgba(255,234,97,0) 70%)',
+        }}
+      />
+      {/* diagonal-line pattern decoration on the right (Figma 216:3644 "pattern") */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-[10px] top-[-43px] w-[58px] h-[116px] opacity-50"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(135deg, rgba(0,17,36,0.10) 0 1px, transparent 1px 6px)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+        }}
+      />
 
       <div className="relative flex items-center gap-3 pl-1 pr-3 py-3 h-[108px]">
         {/* Polaroid stack */}
@@ -99,22 +136,53 @@ export function FourKCard() {
           </div>
         </div>
 
-        {/* Text */}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
+        {/* Text — heading + price-comparison lines (Figma 306:3181) */}
+        <div
+          className="flex flex-col gap-2 flex-1 min-w-0"
+          style={{ fontFamily: 'var(--font-greed)' }}
+        >
+          {/* Heading */}
           <p
             className="text-[16px] leading-[20px] text-[var(--color-text-primary)]"
-            style={{ fontFamily: 'var(--font-greed)', fontWeight: 450 }}
+            style={{ fontWeight: 450 }}
           >
             Get 50 images in 4K vs 3 Photos in SD
           </p>
+
+          {/* Price comparison — equal-weight labels, prices carry the contrast */}
           <div
             className="text-[14px] leading-[18px] text-[var(--color-text-secondary)]"
-            style={{ fontFamily: 'var(--font-greed)' }}
+            style={{ fontWeight: 400 }}
           >
-            <p>Starter Pack - $20/Photo</p>
-            <p>Premium - 1.5$/Photo in HD + 50 Credits</p>
+            <p>
+              Starter Pack —{' '}
+              <span
+                className="text-[var(--color-text-primary)]"
+                style={{ fontWeight: 600 }}
+              >
+                $20
+              </span>
+              /Photo in SD
+            </p>
+            <p>
+              Premium —{' '}
+              <span
+                className="text-[var(--color-text-emphasis)]"
+                style={{ fontWeight: 600 }}
+              >
+                $1.5
+              </span>
+              /Photo in HD +{' '}
+              <span
+                className="text-[var(--color-text-emphasis)]"
+                style={{ fontWeight: 500 }}
+              >
+                50 Credits
+              </span>
+            </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
@@ -166,7 +234,7 @@ export function UpsellFooter({
       >
         <span className="text-[16px] leading-[22px]">{primaryPrice}</span>
         <span className="text-white/40 text-[16px]">|</span>
-        <span className="text-[16px] leading-[22px]">Pay to purchase premium</span>
+        <span className="text-[16px] leading-[22px]">Switch to premium</span>
         <ChevronLeft size={18} className="rotate-180 opacity-70" />
       </button>
 
@@ -178,7 +246,7 @@ export function UpsellFooter({
       >
         <span className="text-[16px] leading-[22px]">{secondaryPrice}</span>
         <span className="text-[var(--color-text-tertiary)] text-[16px]">|</span>
-        <span className="text-[16px] leading-[22px]">Keep starter &amp; continue</span>
+        <span className="text-[16px] leading-[22px]">Continue with Starter</span>
       </button>
     </div>
   )
