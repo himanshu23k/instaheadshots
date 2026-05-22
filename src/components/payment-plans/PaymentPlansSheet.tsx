@@ -311,11 +311,6 @@ export function PaymentPlansSheet() {
     }, 400)
   }
 
-  const handleSkipPay = () => {
-    setDiscountOn(false)
-    setView('payment')
-  }
-
   const handleCTA = () => {
     if (view === 'select') {
       // If the discount is already unlocked (all 3 invites sent), skip the invite step
@@ -482,7 +477,6 @@ export function PaymentPlansSheet() {
         emailValidity.some((v) => v === 'valid-editable')
       }
       onClick={handleCTA}
-      onSkipPay={handleSkipPay}
     />
   )
 
@@ -1606,7 +1600,6 @@ function FooterCTA({
   sendPhase,
   emailsReady,
   onClick,
-  onSkipPay,
 }: {
   view: View
   selectedPackId: PackId
@@ -1616,7 +1609,6 @@ function FooterCTA({
   sendPhase: SendPhase
   emailsReady: boolean
   onClick: () => void
-  onSkipPay: () => void
 }) {
   // When the discount is already unlocked, the Premium price is always the discounted one
   // regardless of the toggle state — and we never route back through invites.
@@ -1717,17 +1709,6 @@ function FooterCTA({
         </AnimatePresence>
       </button>
 
-      {view === 'invite' && (
-        <button
-          type="button"
-          onClick={onSkipPay}
-          className="flex h-11 w-full md:flex-1 items-center justify-center px-6 border border-[#e1e2e5] text-text-primary transition-colors hover:bg-[#f5f5f6] active:translate-y-px"
-        >
-          <span className="text-[16px] leading-[22px]">₹{PREMIUM_PRICE.toLocaleString('en-IN')}</span>
-          <span className="text-[16px] leading-[22px] text-[rgba(1,17,36,0.3)] mx-2">|</span>
-          <span className="text-[16px] leading-[22px]">Skip & Pay</span>
-        </button>
-      )}
       </div>
     </div>
   )
