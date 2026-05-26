@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Heart, ArrowDownToLine } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useReferralStore, useReferralStatus, formatCountdown } from '@/store/referral-store'
-import { PREMIUM_DISCOUNT_PRICE } from '@/components/payment-plans/PaymentPlansSheet'
+import { useReferralStore, useReferralStatus } from '@/store/referral-store'
+import { DiscountCountdownBar } from '@/components/common/DiscountCountdownBar'
 
 const GALLERY_IMAGES = [
   { id: 'face-01', src: '/mock/faces/face-01.jpg', isTopPick: true },
@@ -33,7 +33,6 @@ export function ReferralPre() {
     preToastLabel = 'Invite & get 25% off on Premium'
     preToastInitialView = 'invite'
   }
-  const formattedDiscountPrice = `₹${PREMIUM_DISCOUNT_PRICE.toLocaleString('en-IN')}`
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [, setTick] = useState(0)
 
@@ -98,22 +97,11 @@ export function ReferralPre() {
 
   const renderUnlockedToast = () =>
     discountUnlocked && (
-      <div
-        role="button"
-        tabIndex={0}
+      <DiscountCountdownBar
+        secondsRemaining={secondsRemaining}
+        gracePeriodActive={gracePeriodActive}
         onClick={() => openPlans('payment')}
-        className="flex w-full cursor-pointer items-center justify-center bg-[#fee2e2] px-4 py-2"
-      >
-        <motion.span
-          style={{ color: '#DB4848', fontFeatureSettings: "'ss01' on, 'ss02' on, 'ss06' on", fontFamily: '"Greed Standard VF", sans-serif', fontSize: '16px', fontStyle: 'normal', fontWeight: 500, lineHeight: '18px', display: 'inline-block', transformOrigin: 'center' }}
-          animate={gracePeriodActive ? { scale: [1, 1.09, 1, 1.05, 1] } : { scale: 1 }}
-          transition={gracePeriodActive ? { duration: 4, ease: 'easeInOut', repeat: Infinity, times: [0, 0.0625, 0.125, 0.1875, 1] } : { duration: 0 }}
-        >
-          {gracePeriodActive
-            ? 'Last chance! Get Premium at ₹3,999'
-            : `Get Premium at ${formattedDiscountPrice} for ${formatCountdown(secondsRemaining)}`}
-        </motion.span>
-      </div>
+      />
     )
 
   return (
