@@ -10,6 +10,9 @@
 export type GenderId = 'male' | 'female' | 'other'
 export type StyleId = 'professional' | 'casual' | 'mix'
 
+/** Nothing picked yet — the photo pools treat this the same as `other`. */
+export type GenderChoice = GenderId | null
+
 export type GenderOption = { id: GenderId; label: string }
 export type StyleOption = {
   id: StyleId
@@ -131,9 +134,18 @@ export const PHOTOS: Record<GenderId, Record<StyleId, string[]>> = {
   },
 }
 
+/**
+ * Resolve a possibly-unmade choice to a photo pool. With no gender picked we
+ * show the widest range rather than defaulting to one — which is the same pool
+ * `other` uses, an interleave of both sets.
+ */
+function pool(gender: GenderChoice): GenderId {
+  return gender ?? 'other'
+}
+
 /** Every photo for a gender, style-ordered — used to top up short pools. */
-function allFor(gender: GenderId): string[] {
-  const g = PHOTOS[gender]
+function allFor(gender: GenderChoice): string[] {
+  const g = PHOTOS[pool(gender)]
   return [...new Set([...g.professional, ...g.casual])]
 }
 
@@ -145,8 +157,8 @@ function allFor(gender: GenderId): string[] {
  * gender's library — the grid stays style-weighted and stays six distinct faces.
  * Only if the whole gender pool is smaller than `count` do images repeat.
  */
-export function photosFor(gender: GenderId, style: StyleId, count: number): string[] {
-  const primary = PHOTOS[gender][style]
+export function photosFor(gender: GenderChoice, style: StyleId, count: number): string[] {
+  const primary = PHOTOS[pool(gender)][style]
   const out = primary.slice(0, count)
   if (out.length < count) {
     for (const src of allFor(gender)) {
@@ -159,6 +171,6 @@ export function photosFor(gender: GenderId, style: StyleId, count: number): stri
 }
 
 /** The three hero photos behind the un-selected desktop state. */
-export function heroPhotosFor(gender: GenderId): string[] {
+export function heroPhotosFor(gender: GenderChoice): string[] {
   return photosFor(gender, 'mix', 3)
 }

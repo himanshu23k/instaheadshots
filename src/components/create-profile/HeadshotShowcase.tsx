@@ -17,7 +17,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { heroPhotosFor, photosFor, type GenderId, type StyleId } from './create-profile-data'
+import { heroPhotosFor, photosFor, type GenderChoice, type StyleId } from './create-profile-data'
 
 /** The showcase is laid out at Figma's exact pixel geometry, then scaled to fit. */
 const DESIGN_W = 596
@@ -124,7 +124,7 @@ export function HeadshotShowcase({
   gender,
   style,
 }: {
-  gender: GenderId
+  gender: GenderChoice
   style: StyleId | null
 }) {
   const reduceMotion = useReducedMotion()
@@ -143,7 +143,7 @@ export function HeadshotShowcase({
   // card in its slot so the swap reads as a re-photograph, not a reshuffle.
   // Adjusted during render rather than in an effect — it is derived from a
   // prop change, so an effect would cost an extra render with stale faces.
-  const [dealtFor, setDealtFor] = useState<GenderId>(gender)
+  const [dealtFor, setDealtFor] = useState<GenderChoice>(gender)
   if (dealtFor !== gender) {
     setDealtFor(gender)
     const fresh = heroPhotosFor(gender)

@@ -55,7 +55,7 @@ function TopBar({ className = '' }: { className?: string }) {
 export function CreateProfilePage() {
   const navigate = useNavigate()
   const { name, gender, style, setName, setGender, setStyle } = useCreateProfileStore()
-  const canContinue = name.trim().length > 0 && style !== null
+  const canContinue = name.trim().length > 0 && gender !== null && style !== null
 
   const handleContinue = () => {
     if (!canContinue) return
