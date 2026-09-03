@@ -17,6 +17,7 @@ import { HomePage } from '@/components/home/HomePage'
 import { PaymentPlansSheet } from '@/components/payment-plans/PaymentPlansSheet'
 import { UpsellPage } from '@/components/noor/upsell/UpsellPage'
 import { ReferralPre } from '@/components/devansh/ReferralPre'
+import { CreateProfilePage } from '@/components/create-profile/CreateProfilePage'
 import type { StepId } from '@/types'
 
 const STEP_COMPONENTS: Record<StepId, React.ComponentType> = {
@@ -75,6 +76,7 @@ function AppRoutes() {
           <Route path="/" element={<V1App />} />
           <Route path="/edit-v2" element={<StudioShell />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/create-profile" element={<CreateProfilePage />} />
           <Route path="/noor/upsell" element={<UpsellPage />} />
           <Route path="/devansh/referral-pre" element={<ReferralPre />} />
           {/* Prevent /payment-plans from rendering inside the scaled background */}
