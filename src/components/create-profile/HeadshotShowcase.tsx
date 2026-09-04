@@ -1,66 +1,89 @@
 /**
  * Desktop-only photo showcase for /create-profile (Figma 6453:4750 / 6453:4873).
  *
- * Two states, one set of DOM nodes so the change is a transform rather than a
- * swap:
- *   - no style picked  -> three large cards fanned like a deck, shuffling on a
- *                         timer and pulling fresh faces in from the back
- *   - style picked     -> the deck flies apart into the 3x2 grid of examples
- *                         for that style, and the remaining tiles fade in.
- *                         A card already showing a photo of the chosen style
- *                         keeps it and travels to that photo's own cell; the
- *                         rest dissolve into whatever belongs where they land.
+ * Two presentations of the idle state, chosen by ?version=:
+ *   - v1: three large cards fanned like a deck, shuffling on a timer and
+ *         pulling fresh faces in from the back, under a gradient heading.
+ *   - v2: one square frame the full width of the showcase, dissolving slowly
+ *         from photo to photo, and no heading — a quieter panel that competes
+ *         less with the form beside it.
  *
- * Both states re-photograph themselves when the gender changes.
+ * Choosing a style resolves either one into a grid of examples: 3x2 for v1,
+ * 3x3 for v2. A card already showing a photo of the chosen style keeps that
+ * image and travels to the photo's own cell; the rest dissolve into whatever
+ * belongs where they land, and unclaimed cells fade in.
  *
- * Every card is one fixed 429x453 box moved purely by transform. The three fan
- * boxes and the grid tile share an aspect ratio to within 0.2%, so a uniform
- * scale reproduces all four sizes and nothing ever animates a layout property —
- * the image rasterises once and the GPU does the rest.
+ * Both re-photograph themselves when the gender changes.
+ *
+ * Every card is one fixed box moved purely by transform. Each version's hero
+ * box and grid cell share an aspect ratio, so a uniform scale reproduces every
+ * size and nothing ever animates a layout property — the image rasterises once
+ * and the GPU does the rest.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { heroPhotosFor, photosFor, type GenderChoice, type StyleId } from './create-profile-data'
+import { photosFor, type GenderChoice, type StyleId } from './create-profile-data'
 
-/** The showcase is laid out at Figma's exact pixel geometry, then scaled to fit. */
-const DESIGN_W = 596
-const DESIGN_H = 642
-
-/** Every card is this box; scale takes it to the size each slot needs. */
-const BASE_W = 429
-const BASE_H = 453
+export type ShowcaseVersion = 'v1' | 'v2'
 
 type Placement = { x: number; y: number; scale: number; rotate: number }
 
-/** Figma's left/top/width/height for a slot -> a centre-origin transform. */
-function place(left: number, top: number, w: number, h: number, rotate = 0): Placement {
-  return {
-    x: left + w / 2 - BASE_W / 2,
-    y: top + h / 2 - BASE_H / 2,
-    scale: w / BASE_W,
+/** Turn a left/top/width/height rectangle into a centre-origin transform. */
+function placer(baseW: number, baseH: number) {
+  return (left: number, top: number, w: number, h: number, rotate = 0): Placement => ({
+    x: left + w / 2 - baseW / 2,
+    y: top + h / 2 - baseH / 2,
+    scale: w / baseW,
     rotate,
-  }
+  })
 }
 
-/** Deck positions, back to front (Figma 6453:4813 / 4814 / 4753). */
-const FAN: Placement[] = [
-  place(157.8, 161.87, 387.39, 409.26, 1.79),
-  place(47.76, 162.65, 387.39, 409.26, -3.09),
-  place(86.38, 140, 429, 453),
-]
+const WIDTH = 596
 
-/** 3x2 grid at left 54 / top 100, 488x340 with a 10px gutter (Figma 6453:4916). */
-const TILE_W = 156
-const TILE_H = 165
-const GRID: Placement[] = Array.from({ length: 6 }, (_, i) =>
-  place(54 + (i % 3) * (TILE_W + 10), 100 + Math.floor(i / 3) * (TILE_H + 10), TILE_W, TILE_H),
-)
+// ── v1 ────────────────────────────────────────────────────────────────────
+// Figma's own geometry: a 429x453 card, a fan of three, a 3x2 grid of 156x165
+// cells at left 54 / top 100 with a 10px gutter (6453:4813/4814/4753, 4916).
+const V1 = (() => {
+  const w = 429
+  const h = 453
+  const at = placer(w, h)
+  return {
+    base: { w, h },
+    design: { w: WIDTH, h: 642 },
+    heroes: [
+      at(157.8, 161.87, 387.39, 409.26, 1.79),
+      at(47.76, 162.65, 387.39, 409.26, -3.09),
+      at(86.38, 140, 429, 453),
+    ],
+    grid: Array.from({ length: 6 }, (_, i) =>
+      at(54 + (i % 3) * 166, 100 + Math.floor(i / 3) * 175, 156, 165),
+    ),
+    heading: true,
+  }
+})()
 
-/**
- * v2 shows one calm photo instead of the fanned deck: full width of the
- * showcase, sitting on the same top edge as the grid it gives way to.
- */
-const SOLO = { x: 0, y: 96, w: DESIGN_W, h: 512 }
+// ── v2 ────────────────────────────────────────────────────────────────────
+// A square hero the full width of the showcase, and a 3x3 grid of square cells
+// concentric with it, so the hero scales straight down into whichever cell its
+// photo belongs to.
+const V2 = (() => {
+  const w = WIDTH
+  const at = placer(w, w)
+  const cell = 156
+  const pitch = cell + 10
+  const inset = (w - (3 * cell + 2 * 10)) / 2 // 54, centring the grid in the hero
+  return {
+    base: { w, h: w },
+    design: { w: WIDTH, h: w },
+    heroes: [at(0, 0, w, w)],
+    grid: Array.from({ length: 9 }, (_, i) =>
+      at(inset + (i % 3) * pitch, inset + Math.floor(i / 3) * pitch, cell, cell),
+    ),
+    heading: false,
+  }
+})()
+
+const LAYOUT = { v1: V1, v2: V2 } as const
 
 /** How long a photo stays before the next one takes over, in either version. */
 const PHOTO_MS = 5000
@@ -70,9 +93,9 @@ const TRAVEL_S = 0.9
 const FOLLOW_S = 0.09
 
 /**
- * Breathing room above the design box. The box already carries 20px above its
- * title, which lines the title up with the form heading opposite (24px inside
- * the card), so this only needs to keep it off the very top of the section.
+ * Breathing room above the design box. v1's box already carries 20px above its
+ * heading, which lines that heading up with the form heading opposite; v2 has
+ * no heading, so this is all the clearance it gets.
  */
 const TOP_INSET = 8
 
@@ -178,8 +201,6 @@ function planGrid(cards: Card[], gridPhotos: string[]): Map<number, number> {
   return cellOf
 }
 
-export type ShowcaseVersion = 'v1' | 'v2'
-
 export function HeadshotShowcase({
   gender,
   style,
@@ -190,14 +211,16 @@ export function HeadshotShowcase({
   version?: ShowcaseVersion
 }) {
   const reduceMotion = useReducedMotion()
-  const { ref, scale } = useFitScale(DESIGN_W, DESIGN_H, TOP_INSET)
+  const L = LAYOUT[version]
+  const { ref, scale } = useFitScale(L.design.w, L.design.h, TOP_INSET)
+  const isSolo = L.heroes.length === 1
 
-  const gridPhotos = style ? photosFor(gender, style, 6) : null
+  const gridPhotos = style ? photosFor(gender, style, L.grid.length) : null
 
-  // The three deck cards keep their identity across the shuffle and across the
+  // The hero cards keep their identity across the shuffle and across the
   // flight into the grid, so motion animates movement instead of a remount.
   const [cards, setCards] = useState<Card[]>(() =>
-    heroPhotosFor(gender).map((photo, i) => ({ id: i, photo, slot: i })),
+    photosFor(gender, 'mix', L.heroes.length).map((photo, i) => ({ id: i, photo, slot: i })),
   )
   const poolCursor = useRef(0)
 
@@ -219,7 +242,7 @@ export function HeadshotShowcase({
     setCards((prev) => {
       if (!style) {
         // Back to the fan.
-        const fresh = heroPhotosFor(gender)
+        const fresh = photosFor(gender, 'mix', L.heroes.length)
         return prev.map((c) => ({
           ...c,
           cell: undefined,
@@ -227,7 +250,7 @@ export function HeadshotShowcase({
           pending: undefined,
         }))
       }
-      const grid = photosFor(gender, style, 6)
+      const grid = photosFor(gender, style, L.grid.length)
       if (!styleChanged) {
         // Gender changed under a chosen style: same cells, every face dissolves.
         return prev.map((c) => ({ ...c, photo: grid[c.cell ?? 0], pending: undefined }))
@@ -240,54 +263,59 @@ export function HeadshotShowcase({
     })
   }
 
+  // What the cards show right now, readable from inside the interval without
+  // making it depend on `cards` and tear the timer down on every tick.
+  const cardsRef = useRef(cards)
+  useEffect(() => {
+    cardsRef.current = cards
+  }, [cards])
+
   // Idle shuffle — only while nothing is selected.
   useEffect(() => {
     // The deck was just re-dealt from the top of this gender's pool.
     poolCursor.current = 0
-    if (version === 'v2' || style || reduceMotion) return
-    const pool = photosFor(gender, 'mix', 6)
+    if (style || reduceMotion) return
+    const pool = photosFor(gender, 'mix', Math.max(6, L.heroes.length * 2))
     const id = setInterval(() => {
-      setCards((prev) => {
-        // A card cycling back to the rear of the deck brings in a new face —
-        // the next one in the pool that no card is currently showing, its own
-        // photo included. Excluding only the other two let a card be handed
-        // back the picture it already had, so that beat rotated the deck
-        // without actually changing a photo. It is staged as `pending` and
-        // swapped in once the card has landed at the back, so the cross-fade
-        // never happens in full view.
-        const staying = prev.map((c) => c.photo)
-        let incoming: string | undefined
-        for (let i = 0; i < pool.length; i++) {
-          poolCursor.current += 1
-          const candidate = pool[poolCursor.current % pool.length]
-          if (!staying.includes(candidate)) {
-            incoming = candidate
-            break
-          }
+      // Pick the next face here rather than inside the state updater. Advancing
+      // the cursor is a side effect, and React invokes updaters twice in
+      // development to surface exactly that — which skipped every other photo
+      // in dev while production showed them all.
+      const onScreen = cardsRef.current.map((c) => c.photo)
+      let incoming: string | undefined
+      for (let i = 0; i < pool.length; i++) {
+        poolCursor.current += 1
+        const candidate = pool[poolCursor.current % pool.length]
+        // The next photo no card is showing, its own included — excluding only
+        // the others let a card be handed back the picture it already had, so
+        // that beat rotated the deck without actually changing a photo.
+        if (!onScreen.includes(candidate)) {
+          incoming = candidate
+          break
         }
+      }
+
+      setCards((prev) => {
+        if (prev.length === 1) {
+          // v2: nothing to rotate, and with no movement there is no animation
+          // to land on, so the next face is committed outright and dissolves.
+          return prev.map((c) => ({ ...c, photo: incoming ?? c.photo }))
+        }
+        // v1: the deck rotates and the card reaching the back takes the new
+        // face, staged as `pending` and swapped in once it has landed there so
+        // the cross-fade never happens in full view.
         return prev.map((c) => {
-          const slot = (c.slot + 1) % 3
+          const slot = (c.slot + 1) % prev.length
           return slot === 0 ? { ...c, slot, pending: incoming } : { ...c, slot }
         })
       })
     }, PHOTO_MS)
     return () => clearInterval(id)
-  }, [version, style, gender, reduceMotion])
+  }, [L, style, gender, reduceMotion])
 
-  // v2's single frame walks its own pool on the same clock as the deck.
-  const soloPool = photosFor(gender, 'mix', 8)
-  const [soloStep, setSoloStep] = useState(0)
-  useEffect(() => {
-    if (version !== 'v2' || style || reduceMotion) return
-    const id = setInterval(() => setSoloStep((n) => n + 1), PHOTO_MS)
-    return () => clearInterval(id)
-  }, [version, style, reduceMotion])
-  const soloPhoto = soloPool[soloStep % soloPool.length]
-
-  // Cells no deck card holds — the tiles that fade in to complete the grid.
-  // v2 has no deck, so every cell is filled that way.
-  const held = new Set(version === 'v2' ? [] : cards.map((c) => c.cell))
-  const spare = gridPhotos ? GRID.map((_, i) => i).filter((i) => !held.has(i)) : []
+  // Cells no hero card holds — the tiles that fade in to complete the grid.
+  const held = new Set(cards.map((c) => c.cell))
+  const spare = gridPhotos ? L.grid.map((_, i) => i).filter((i) => !held.has(i)) : []
 
   /** Commit a staged face once its card has finished travelling to the back. */
   const land = (id: number) => {
@@ -303,8 +331,8 @@ export function HeadshotShowcase({
       <div
         className="relative shrink-0"
         style={{
-          width: DESIGN_W,
-          height: DESIGN_H,
+          width: L.design.w,
+          height: L.design.h,
           marginTop: TOP_INSET,
           transform: `scale(${scale})`,
           // Top-left-ish origin, so a section taller than the design box leaves
@@ -322,6 +350,7 @@ export function HeadshotShowcase({
           transformStyle: 'preserve-3d',
         }}
       >
+        {L.heading && (
         <p
           className="absolute top-5 left-1/2 w-[277.7px] -translate-x-1/2 text-center text-[22px] leading-6 tracking-[-0.22px]"
           style={{
@@ -339,35 +368,12 @@ export function HeadshotShowcase({
           <br />
           {' Stunning headshots'}
         </p>
+        )}
 
-        {/* v2: one full-width frame, dissolving from photo to photo. */}
-        <AnimatePresence>
-          {version === 'v2' && !gridPhotos && (
-            <motion.div
-              key="solo"
-              className="absolute top-0 left-0 overflow-hidden border border-white bg-[var(--color-shapes-grey)]"
-              style={{
-                width: SOLO.w,
-                height: SOLO.h,
-                x: SOLO.x,
-                y: SOLO.y,
-                borderRadius: 12,
-                willChange: 'transform',
-                boxShadow: '0px 2px 32px 0px rgba(0,0,0,0.1)',
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeInOut' }}
-            >
-              <PhotoTile src={soloPhoto} fade={1.2} emerge={1.03} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* v1: the three deck cards — they fly into their grid cells. */}
-        {version === 'v1' && cards.map((card) => {
-          const to = gridPhotos ? GRID[card.cell ?? card.slot] : FAN[card.slot]
+        {/* Hero cards — three fanned in v1, one square frame in v2. They
+            fly into their grid cells when a style is chosen. */}
+        {cards.map((card) => {
+          const to = gridPhotos ? L.grid[card.cell ?? card.slot] : L.heroes[card.slot]
           // card.photo is already what this card shows. If the plan let it keep
           // its picture there is no src change and nothing cross-fades — the
           // image simply travels to its cell. Otherwise PhotoTile dissolves.
@@ -380,8 +386,8 @@ export function HeadshotShowcase({
               key={card.id}
               className="absolute top-0 left-0 overflow-hidden border-white bg-[var(--color-shapes-grey)]"
               style={{
-                width: BASE_W,
-                height: BASE_H,
+                width: L.base.w,
+                height: L.base.h,
                 borderStyle: 'solid',
                 transformOrigin: 'center',
                 willChange: 'transform',
@@ -396,7 +402,7 @@ export function HeadshotShowcase({
                 // Depth, interpolated alongside the travel — the card being
                 // dealt sinks behind the other two over the course of its
                 // move rather than snapping behind them on the first frame.
-                z: card.slot * 40,
+                z: isSolo ? 40 : card.slot * 40,
                 borderWidth: k,
                 borderRadius: 12 * k,
               }}
@@ -404,7 +410,11 @@ export function HeadshotShowcase({
                 reduceMotion
                   ? { duration: 0 }
                   : gridPhotos
-                    ? { type: 'spring', stiffness: 150, damping: 22, mass: 0.9 }
+                    ? isSolo
+                      // v2 settles into its cell rather than springing, to keep
+                      // the panel calm.
+                      ? { duration: 0.75, ease: [0.32, 0.72, 0, 1] }
+                      : { type: 'spring', stiffness: 150, damping: 22, mass: 0.9 }
                     : {
                         duration: TRAVEL_S,
                         ease: [0.4, 0, 0.16, 1],
@@ -413,7 +423,14 @@ export function HeadshotShowcase({
               }
               onAnimationComplete={() => land(card.id)}
             >
-              <PhotoTile src={photo} />
+              <PhotoTile
+                src={photo}
+                // v2's idle frame is the one thing on this panel that moves on
+                // its own, so it dissolves slowly and settles in from a hair
+                // larger. Everything else uses the brisker default.
+                fade={isSolo && !gridPhotos ? 1.2 : 0.45}
+                emerge={isSolo && !gridPhotos ? 1.03 : 1}
+              />
             </motion.div>
           )
         })}
@@ -426,15 +443,15 @@ export function HeadshotShowcase({
               // same compensation. The browser quantises border-width to whole
               // pixels, so a tile drawn at its true 156x165 would end up with a
               // visibly heavier hairline than its scaled neighbours.
-              const slot = GRID[cell]
+              const slot = L.grid[cell]
               const k = 1 / slot.scale
               return (
                 <motion.div
                   key={`spare-${cell}`}
                   className="absolute top-0 left-0 overflow-hidden border-white bg-[var(--color-shapes-grey)]"
                   style={{
-                    width: BASE_W,
-                    height: BASE_H,
+                    width: L.base.w,
+                    height: L.base.h,
                     borderStyle: 'solid',
                     borderWidth: k,
                     borderRadius: 12 * k,

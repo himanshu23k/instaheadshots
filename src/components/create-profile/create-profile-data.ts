@@ -55,6 +55,9 @@ const DIR = '/create-profile'
 const FILES = {
   'professional-male': [
     '2a2eacb518b35884.jpeg',
+    '5cd40d64315a1c23.jpeg',
+    '694bdf616ab8644b.jpeg',
+    'b8c238e7a93e151b.jpeg',
     'e7a2ec7ea5189c7f.jpeg',
     'ec07d8e90b5052dc.jpeg',
     'professional 01.png',
@@ -77,7 +80,10 @@ const FILES = {
     'fd619d4f7dae3e46.jpeg',
   ],
   'casual-male': [
+    '2007951f6ca9ec14.jpeg',
     '211178fd4eee9a51.jpeg',
+    '405f3342e93edfed.jpeg',
+    '54791be83fbca130.jpeg',
     '82c302a2ab2c726b.jpeg',
     'a42e501aa4ccf4bd.jpeg',
     'casual 01.png',
@@ -85,6 +91,7 @@ const FILES = {
     'casual 03.png',
     'casual 04.png',
     'casual 05.png',
+    'fd030e3c06ee3a1c.jpeg',
   ],
   'casual-female': [
     '20bcf5e979d72454.jpeg',
@@ -183,9 +190,4 @@ export function photosFor(gender: GenderChoice, style: StyleId, count: number): 
   }
   while (out.length < count && out.length > 0) out.push(out[out.length % primary.length])
   return out
-}
-
-/** The three hero photos behind the un-selected desktop state. */
-export function heroPhotosFor(gender: GenderChoice): string[] {
-  return photosFor(gender, 'mix', 3)
 }

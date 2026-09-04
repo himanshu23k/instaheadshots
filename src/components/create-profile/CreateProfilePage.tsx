@@ -7,8 +7,9 @@
  * options collapse to plain radios and the photos move out to the showcase
  * panel, which morphs from a shuffling deck into a grid of examples.
  *
- * ?version=v2 replaces that deck with one full-width frame that dissolves
- * slowly from photo to photo, for a showcase that competes less with the form.
+ * ?version=v2 replaces that deck with one square full-width frame that
+ * dissolves slowly from photo to photo and drops the heading, for a showcase
+ * that competes less with the form. Its grid is 3x3 rather than 3x2.
  */
 import { ArrowLeft, Menu } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -182,7 +183,9 @@ export function CreateProfilePage() {
 
           {/* Showcase column — desktop only */}
           <div className="hidden h-full min-w-0 flex-1 web:block">
-            <HeadshotShowcase gender={gender} style={style} version={version} />
+            {/* Keyed by version: the two lay out a different number of hero
+                cards, so switching must remount rather than reuse the state. */}
+            <HeadshotShowcase key={version} gender={gender} style={style} version={version} />
           </div>
         </div>
       </div>
