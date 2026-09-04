@@ -100,7 +100,11 @@ export function CreateProfilePage() {
       className="fixed inset-0 flex flex-col overflow-hidden bg-white web:bg-[#F7F7F8] web:px-6 web:pb-6"
       style={{ fontFamily: 'var(--font-greed)' }}
     >
-      <div className="flex min-h-0 w-full flex-1 flex-col web:mx-auto web:max-w-[1280px] web:min-w-[744px]">
+      {/* Figma's 1280 frame includes its own 24px padding, which the parent
+          already applies — so the content row is 1232, not 1280. Capping at
+          1280 here made the showcase column 644 against a 596 design box, and
+          centring it split the slack into an extra 24px beside the form. */}
+      <div className="flex min-h-0 w-full flex-1 flex-col web:mx-auto web:max-w-[1232px] web:min-w-[696px]">
         {/* ── Header ───────────────────────────────────────────────── */}
         <TopBar className="shrink-0 px-4 web:h-16 web:px-0" />
 
