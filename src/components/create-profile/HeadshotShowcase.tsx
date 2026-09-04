@@ -59,6 +59,9 @@ const V1 = (() => {
       at(54 + (i % 3) * 166, 100 + Math.floor(i / 3) * 175, 156, 165),
     ),
     heading: true,
+    // The heading already sits 20px down, which lines it up with the form
+    // heading opposite; this keeps it off the very top of the section.
+    topInset: 8,
   }
 })()
 
@@ -71,15 +74,19 @@ const V2 = (() => {
   const at = placer(w, w)
   const cell = 156
   const pitch = cell + 10
-  const inset = (w - (3 * cell + 2 * 10)) / 2 // 54, centring the grid in the hero
+  const sideInset = (w - (3 * cell + 2 * 10)) / 2 // 54, centring the grid across
   return {
     base: { w, h: w },
     design: { w: WIDTH, h: w },
     heroes: [at(0, 0, w, w)],
+    // Top row flush with the frame it replaces, so both states start level
+    // with the top of the form card opposite.
     grid: Array.from({ length: 9 }, (_, i) =>
-      at(inset + (i % 3) * pitch, inset + Math.floor(i / 3) * pitch, cell, cell),
+      at(sideInset + (i % 3) * pitch, Math.floor(i / 3) * pitch, cell, cell),
     ),
     heading: false,
+    // No heading to carry, so nothing should push the photo down at all.
+    topInset: 0,
   }
 })()
 
@@ -91,13 +98,6 @@ const PHOTO_MS = 5000
 const TRAVEL_S = 0.9
 /** Cards behind the one being dealt follow a beat later, so it reads as a deal. */
 const FOLLOW_S = 0.09
-
-/**
- * Breathing room above the design box. v1's box already carries 20px above its
- * heading, which lines that heading up with the form heading opposite; v2 has
- * no heading, so this is all the clearance it gets.
- */
-const TOP_INSET = 8
 
 /** Scale the fixed design box down when the section is shorter than it. */
 function useFitScale(designW: number, designH: number, inset: number) {
@@ -212,7 +212,7 @@ export function HeadshotShowcase({
 }) {
   const reduceMotion = useReducedMotion()
   const L = LAYOUT[version]
-  const { ref, scale } = useFitScale(L.design.w, L.design.h, TOP_INSET)
+  const { ref, scale } = useFitScale(L.design.w, L.design.h, L.topInset)
   const isSolo = L.heroes.length === 1
 
   const gridPhotos = style ? photosFor(gender, style, L.grid.length) : null
@@ -333,7 +333,7 @@ export function HeadshotShowcase({
         style={{
           width: L.design.w,
           height: L.design.h,
-          marginTop: TOP_INSET,
+          marginTop: L.topInset,
           transform: `scale(${scale})`,
           // Top-left-ish origin, so a section taller than the design box leaves
           // its slack at the bottom and the title stays level with the form
