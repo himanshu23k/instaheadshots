@@ -6,9 +6,12 @@
  * one marquees. At 1280px and up it is the desktop frame (6453:4694): the style
  * options collapse to plain radios and the photos move out to the showcase
  * panel, which morphs from a shuffling deck into a grid of examples.
+ *
+ * ?version=v2 replaces that deck with one full-width frame that dissolves
+ * slowly from photo to photo, for a showcase that competes less with the form.
  */
 import { ArrowLeft, Menu } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCreateProfileStore } from '@/store/create-profile-store'
 import {
   ChoiceButton,
@@ -18,7 +21,7 @@ import {
   RadioDial,
 } from './CreateProfileFields'
 import { GENDER_OPTIONS, STYLE_OPTIONS } from './create-profile-data'
-import { HeadshotShowcase } from './HeadshotShowcase'
+import { HeadshotShowcase, type ShowcaseVersion } from './HeadshotShowcase'
 import { MobileStyleCard } from './MobileStyleCard'
 
 const HEADING = 'Who are you creating this profile for?'
@@ -53,6 +56,10 @@ function TopBar({ className = '' }: { className?: string }) {
 
 export function CreateProfilePage() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  // ?version=v2 swaps the desktop showcase's idle state from the fanned deck
+  // to a single full-width frame. Anything else falls back to v1.
+  const version: ShowcaseVersion = params.get('version') === 'v2' ? 'v2' : 'v1'
   const { name, gender, style, setName, setGender, setStyle } = useCreateProfileStore()
   const canContinue = name.trim().length > 0 && gender !== null && style !== null
 
@@ -175,7 +182,7 @@ export function CreateProfilePage() {
 
           {/* Showcase column — desktop only */}
           <div className="hidden h-full min-w-0 flex-1 web:block">
-            <HeadshotShowcase gender={gender} style={style} />
+            <HeadshotShowcase gender={gender} style={style} version={version} />
           </div>
         </div>
       </div>

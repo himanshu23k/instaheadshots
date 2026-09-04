@@ -56,7 +56,14 @@ const GRID: Placement[] = Array.from({ length: 6 }, (_, i) =>
   place(54 + (i % 3) * (TILE_W + 10), 100 + Math.floor(i / 3) * (TILE_H + 10), TILE_W, TILE_H),
 )
 
-const SHUFFLE_MS = 3000
+/**
+ * v2 shows one calm photo instead of the fanned deck: full width of the
+ * showcase, sitting on the same top edge as the grid it gives way to.
+ */
+const SOLO = { x: 0, y: 96, w: DESIGN_W, h: 512 }
+
+/** How long a photo stays before the next one takes over, in either version. */
+const PHOTO_MS = 5000
 /** How long a card takes to travel between slots. */
 const TRAVEL_S = 0.9
 /** Cards behind the one being dealt follow a beat later, so it reads as a deal. */
@@ -91,8 +98,15 @@ function useFitScale(designW: number, designH: number, inset: number) {
   return { ref, scale }
 }
 
-/** One photo that cross-fades whenever its source changes. */
-function PhotoTile({ src }: { src: string }) {
+/**
+ * One photo that cross-fades whenever its source changes.
+ *
+ * `fade` and `emerge` let the v2 hero dissolve far more slowly than a grid
+ * tile, and let the incoming frame settle in from a hair larger — enough to
+ * read as one picture giving way to the next, not enough to pull the eye off
+ * the form beside it.
+ */
+function PhotoTile({ src, fade = 0.45, emerge = 1 }: { src: string; fade?: number; emerge?: number }) {
   return (
     <AnimatePresence initial={false} mode="sync">
       <motion.img
@@ -101,10 +115,10 @@ function PhotoTile({ src }: { src: string }) {
         alt=""
         aria-hidden
         draggable={false}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.45, ease: 'easeInOut' }}
+        initial={{ opacity: 0, scale: emerge }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1 }}
+        transition={{ duration: fade, ease: 'easeInOut' }}
         className="absolute inset-0 size-full select-none object-cover"
         // Figma crops from the bottom, which suits its one full-length source.
         // Our library is head-and-shoulders portraits, so bias to the upper
@@ -164,12 +178,16 @@ function planGrid(cards: Card[], gridPhotos: string[]): Map<number, number> {
   return cellOf
 }
 
+export type ShowcaseVersion = 'v1' | 'v2'
+
 export function HeadshotShowcase({
   gender,
   style,
+  version = 'v1',
 }: {
   gender: GenderChoice
   style: StyleId | null
+  version?: ShowcaseVersion
 }) {
   const reduceMotion = useReducedMotion()
   const { ref, scale } = useFitScale(DESIGN_W, DESIGN_H, TOP_INSET)
@@ -226,16 +244,18 @@ export function HeadshotShowcase({
   useEffect(() => {
     // The deck was just re-dealt from the top of this gender's pool.
     poolCursor.current = 0
-    if (style || reduceMotion) return
+    if (version === 'v2' || style || reduceMotion) return
     const pool = photosFor(gender, 'mix', 6)
     const id = setInterval(() => {
       setCards((prev) => {
         // A card cycling back to the rear of the deck brings in a new face —
-        // the next one in the pool that neither of the other two is showing,
-        // so the deck never displays the same person twice. It is staged as
-        // `pending` and only swapped in once the card has landed at the back,
-        // so the cross-fade never happens in full view.
-        const staying = prev.filter((c) => (c.slot + 1) % 3 !== 0).map((c) => c.photo)
+        // the next one in the pool that no card is currently showing, its own
+        // photo included. Excluding only the other two let a card be handed
+        // back the picture it already had, so that beat rotated the deck
+        // without actually changing a photo. It is staged as `pending` and
+        // swapped in once the card has landed at the back, so the cross-fade
+        // never happens in full view.
+        const staying = prev.map((c) => c.photo)
         let incoming: string | undefined
         for (let i = 0; i < pool.length; i++) {
           poolCursor.current += 1
@@ -250,12 +270,23 @@ export function HeadshotShowcase({
           return slot === 0 ? { ...c, slot, pending: incoming } : { ...c, slot }
         })
       })
-    }, SHUFFLE_MS)
+    }, PHOTO_MS)
     return () => clearInterval(id)
-  }, [style, gender, reduceMotion])
+  }, [version, style, gender, reduceMotion])
+
+  // v2's single frame walks its own pool on the same clock as the deck.
+  const soloPool = photosFor(gender, 'mix', 8)
+  const [soloStep, setSoloStep] = useState(0)
+  useEffect(() => {
+    if (version !== 'v2' || style || reduceMotion) return
+    const id = setInterval(() => setSoloStep((n) => n + 1), PHOTO_MS)
+    return () => clearInterval(id)
+  }, [version, style, reduceMotion])
+  const soloPhoto = soloPool[soloStep % soloPool.length]
 
   // Cells no deck card holds — the tiles that fade in to complete the grid.
-  const held = new Set(cards.map((c) => c.cell))
+  // v2 has no deck, so every cell is filled that way.
+  const held = new Set(version === 'v2' ? [] : cards.map((c) => c.cell))
   const spare = gridPhotos ? GRID.map((_, i) => i).filter((i) => !held.has(i)) : []
 
   /** Commit a staged face once its card has finished travelling to the back. */
@@ -309,8 +340,33 @@ export function HeadshotShowcase({
           {' Stunning headshots'}
         </p>
 
-        {/* The three deck cards — they fly into their grid cells on selection. */}
-        {cards.map((card) => {
+        {/* v2: one full-width frame, dissolving from photo to photo. */}
+        <AnimatePresence>
+          {version === 'v2' && !gridPhotos && (
+            <motion.div
+              key="solo"
+              className="absolute top-0 left-0 overflow-hidden border border-white bg-[var(--color-shapes-grey)]"
+              style={{
+                width: SOLO.w,
+                height: SOLO.h,
+                x: SOLO.x,
+                y: SOLO.y,
+                borderRadius: 12,
+                willChange: 'transform',
+                boxShadow: '0px 2px 32px 0px rgba(0,0,0,0.1)',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeInOut' }}
+            >
+              <PhotoTile src={soloPhoto} fade={1.2} emerge={1.03} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* v1: the three deck cards — they fly into their grid cells. */}
+        {version === 'v1' && cards.map((card) => {
           const to = gridPhotos ? GRID[card.cell ?? card.slot] : FAN[card.slot]
           // card.photo is already what this card shows. If the plan let it keep
           // its picture there is no src change and nothing cross-fades — the
