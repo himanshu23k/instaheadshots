@@ -4,7 +4,7 @@
  * One form, two layouts. Below 1280px it is the mobile frame (6580:5102): the
  * style options are cards that carry their own photo strip, and the selected
  * one marquees. At 1280px and up it is the desktop frame (6453:4694): the style
- * options collapse to icon radios and the photos move out to the showcase
+ * options collapse to plain radios and the photos move out to the showcase
  * panel, which morphs from a shuffling deck into a grid of examples.
  */
 import { ArrowLeft, Menu } from 'lucide-react'
@@ -16,7 +16,6 @@ import {
   NameInput,
   PrimaryCta,
   RadioDial,
-  StyleIcon,
 } from './CreateProfileFields'
 import { GENDER_OPTIONS, STYLE_OPTIONS } from './create-profile-data'
 import { HeadshotShowcase } from './HeadshotShowcase'
@@ -117,7 +116,7 @@ export function CreateProfilePage() {
                   {genderField}
                 </div>
 
-                {/* Style — cards below 1280px, icon radios at 1280px and up.
+                {/* Style — cards below 1280px, radios at 1280px and up.
                     Figma sets this gap to 24 on mobile but 40 on web. */}
                 <div className="mt-6 flex w-full flex-col gap-6 web:mt-10">
                   <FieldHeader title="What kind of photos would you like?" hint={STYLE_HINT} />
@@ -149,7 +148,7 @@ export function CreateProfilePage() {
                         label={o.label}
                         selected={style === o.id}
                         onSelect={() => setStyle(o.id)}
-                        icon={<StyleIcon option={o} />}
+                        icon={<RadioDial checked={style === o.id} />}
                       />
                     ))}
                   </div>

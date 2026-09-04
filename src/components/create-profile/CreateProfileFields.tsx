@@ -5,7 +5,6 @@
  * V1 studio; this screen is on the newer Figma system (48px controls, Greed
  * Standard VF, `--color-*` semantic tokens), so these are local to the route.
  */
-import type { StyleOption } from './create-profile-data'
 
 /** Radio dial — 16px ring, filled black with a 6.4px white dot when on. */
 export function RadioDial({ checked }: { checked: boolean }) {
@@ -25,31 +24,6 @@ export function RadioDial({ checked }: { checked: boolean }) {
       {checked && (
         <span className="absolute left-1/2 top-1/2 block size-[6.4px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
       )}
-    </span>
-  )
-}
-
-/**
- * The three style glyphs, rendered from the SVGs exported out of the Figma
- * node — never redrawn. Each sits in a 16x16 box at its own natural leaf size
- * and offset, and is mirrored on X exactly as the source frames are.
- */
-export function StyleIcon({ option }: { option: StyleOption }) {
-  const { icon, iconSize, iconOffset } = option
-  return (
-    <span aria-hidden className="relative block size-4 shrink-0 overflow-hidden">
-      <img
-        src={icon}
-        alt=""
-        className="absolute max-w-none"
-        style={{
-          width: `${iconSize.w}px`,
-          height: `${iconSize.h}px`,
-          left: `${iconOffset.x}px`,
-          top: `${iconOffset.y}px`,
-          transform: 'scaleX(-1)',
-        }}
-      />
     </span>
   )
 }

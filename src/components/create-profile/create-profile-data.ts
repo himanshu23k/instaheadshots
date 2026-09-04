@@ -20,12 +20,6 @@ export type StyleOption = {
   label: string
   /** Mobile card label (Figma 6588:5248 / 5239 / 5265). */
   cardLabel: string
-  /** Exported Figma icon, rendered verbatim from public/icons. */
-  icon: string
-  /** Natural size of the exported SVG leaf, in px. */
-  iconSize: { w: number; h: number }
-  /** Offset of the leaf inside its 16x16 box, in px. */
-  iconOffset: { x: number; y: number }
 }
 
 export const GENDER_OPTIONS: GenderOption[] = [
@@ -39,25 +33,16 @@ export const STYLE_OPTIONS: StyleOption[] = [
     id: 'professional',
     label: 'All professional',
     cardLabel: 'All Professional',
-    icon: '/icons/style-professional.svg',
-    iconSize: { w: 14.2889, h: 13.4 },
-    iconOffset: { x: 0.86, y: 0.86 },
   },
   {
     id: 'casual',
     label: 'All casual',
     cardLabel: 'All Casuals',
-    icon: '/icons/style-casual.svg',
-    iconSize: { w: 15.6208, h: 13.6373 },
-    iconOffset: { x: 0.19, y: 1.51 },
   },
   {
     id: 'mix',
     label: 'Mix of both',
     cardLabel: 'A Mix of both',
-    icon: '/icons/style-mix.svg',
-    iconSize: { w: 14.289, h: 14.2892 },
-    iconOffset: { x: 0.86, y: 0.41 },
   },
 ]
 
