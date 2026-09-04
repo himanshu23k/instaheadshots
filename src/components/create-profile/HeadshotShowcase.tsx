@@ -6,7 +6,10 @@
  *   - no style picked  -> three large cards fanned like a deck, shuffling on a
  *                         timer and pulling fresh faces in from the back
  *   - style picked     -> the deck flies apart into the 3x2 grid of examples
- *                         for that style, and three more tiles fade in with it
+ *                         for that style, and the remaining tiles fade in.
+ *                         A card already showing a photo of the chosen style
+ *                         keeps it and travels to that photo's own cell; the
+ *                         rest dissolve into whatever belongs where they land.
  *
  * Both states re-photograph themselves when the gender changes.
  *
@@ -114,10 +117,51 @@ function PhotoTile({ src }: { src: string }) {
 
 type Card = {
   id: number
+  /** Always the photo this card is currently showing, in either state. */
   photo: string
+  /** Position in the fan, 0 = back of the deck. */
   slot: number
+  /** Grid cell it occupies once a style is chosen; undefined while fanned. */
+  cell?: number
   /** Set on the card being dealt to the back; swapped in once it lands. */
   pending?: string
+}
+
+/**
+ * Decide which grid cell each deck card flies to when a style is chosen.
+ *
+ * A card already showing a photo that belongs to the chosen category keeps it,
+ * and travels to that photo's own cell — the picture you were looking at simply
+ * takes its place in the grid. Every other card takes the lowest free cell and
+ * dissolves into whatever belongs there. Cells no card claims are filled by the
+ * tiles that fade in alongside.
+ *
+ * A photo in the category but ranked outside the visible six has no cell to go
+ * to, so it dissolves like any other. With the current pools that cannot arise:
+ * the deck only ever draws from the first few of each category.
+ */
+function planGrid(cards: Card[], gridPhotos: string[]): Map<number, number> {
+  const claimed = new Set<number>()
+  const cellOf = new Map<number, number>()
+
+  for (const c of cards) {
+    const i = gridPhotos.indexOf(c.photo)
+    if (i >= 0 && !claimed.has(i)) {
+      claimed.add(i)
+      cellOf.set(c.id, i)
+    }
+  }
+  for (const c of cards) {
+    if (cellOf.has(c.id)) continue
+    for (let i = 0; i < gridPhotos.length; i++) {
+      if (!claimed.has(i)) {
+        claimed.add(i)
+        cellOf.set(c.id, i)
+        break
+      }
+    }
+  }
+  return cellOf
 }
 
 export function HeadshotShowcase({
@@ -139,15 +183,43 @@ export function HeadshotShowcase({
   )
   const poolCursor = useRef(0)
 
-  // Gender changed: re-deal the deck with that gender's faces, keeping each
-  // card in its slot so the swap reads as a re-photograph, not a reshuffle.
-  // Adjusted during render rather than in an effect — it is derived from a
-  // prop change, so an effect would cost an extra render with stale faces.
-  const [dealtFor, setDealtFor] = useState<GenderChoice>(gender)
-  if (dealtFor !== gender) {
-    setDealtFor(gender)
-    const fresh = heroPhotosFor(gender)
-    setCards((prev) => prev.map((c) => ({ ...c, photo: fresh[c.slot] ?? c.photo, pending: undefined })))
+  // Re-photograph the deck whenever gender or style changes. Done during
+  // render rather than in an effect because it is derived from a prop change —
+  // an effect would cost an extra render showing the previous photos.
+  //
+  // `card.photo` is kept equal to what the card actually displays in both
+  // states. Planning the flight into the grid depends on it: matching against a
+  // card's stale fan photo would dissolve away an image that is on screen and
+  // belongs to the chosen category, then fade the same face back in elsewhere.
+  const [applied, setApplied] = useState<{ gender: GenderChoice; style: StyleId | null }>({
+    gender,
+    style,
+  })
+  if (applied.gender !== gender || applied.style !== style) {
+    const styleChanged = applied.style !== style
+    setApplied({ gender, style })
+    setCards((prev) => {
+      if (!style) {
+        // Back to the fan.
+        const fresh = heroPhotosFor(gender)
+        return prev.map((c) => ({
+          ...c,
+          cell: undefined,
+          photo: fresh[c.slot] ?? c.photo,
+          pending: undefined,
+        }))
+      }
+      const grid = photosFor(gender, style, 6)
+      if (!styleChanged) {
+        // Gender changed under a chosen style: same cells, every face dissolves.
+        return prev.map((c) => ({ ...c, photo: grid[c.cell ?? 0], pending: undefined }))
+      }
+      const cellOf = planGrid(prev, grid)
+      return prev.map((c) => {
+        const cell = cellOf.get(c.id) ?? c.slot
+        return { ...c, cell, photo: grid[cell], pending: undefined }
+      })
+    })
   }
 
   // Idle shuffle — only while nothing is selected.
@@ -182,11 +254,18 @@ export function HeadshotShowcase({
     return () => clearInterval(id)
   }, [style, gender, reduceMotion])
 
+  // Cells no deck card holds — the tiles that fade in to complete the grid.
+  const held = new Set(cards.map((c) => c.cell))
+  const spare = gridPhotos ? GRID.map((_, i) => i).filter((i) => !held.has(i)) : []
+
   /** Commit a staged face once its card has finished travelling to the back. */
-  const land = (id: number) =>
+  const land = (id: number) => {
+    // Only while fanned; the grid holds its faces still.
+    if (style) return
     setCards((prev) =>
       prev.map((c) => (c.id === id && c.pending ? { ...c, photo: c.pending, pending: undefined } : c)),
     )
+  }
 
   return (
     <div ref={ref} className="flex size-full items-start justify-center overflow-hidden">
@@ -230,10 +309,13 @@ export function HeadshotShowcase({
           {' Stunning headshots'}
         </p>
 
-        {/* The three deck cards — they fly into grid slots 0-2 on selection. */}
+        {/* The three deck cards — they fly into their grid cells on selection. */}
         {cards.map((card) => {
-          const to = gridPhotos ? GRID[card.slot] : FAN[card.slot]
-          const photo = gridPhotos ? gridPhotos[card.slot] : card.photo
+          const to = gridPhotos ? GRID[card.cell ?? card.slot] : FAN[card.slot]
+          // card.photo is already what this card shows. If the plan let it keep
+          // its picture there is no src change and nothing cross-fades — the
+          // image simply travels to its cell. Otherwise PhotoTile dissolves.
+          const photo = card.photo
           // The card is scaled, so anything measured in px scales with it.
           // Divide through to keep the stroke, corner and shadow at design size.
           const k = 1 / to.scale
@@ -280,18 +362,19 @@ export function HeadshotShowcase({
           )
         })}
 
-        {/* Grid slots 3-5 — they only exist once a style is chosen. */}
+        {/* The cells no deck card claimed — they fade in alongside. */}
         <AnimatePresence>
           {gridPhotos &&
-            GRID.slice(3).map((slot, i) => {
+            spare.map((cell, i) => {
               // Built exactly like the deck cards — same base box, same scale,
               // same compensation. The browser quantises border-width to whole
               // pixels, so a tile drawn at its true 156x165 would end up with a
               // visibly heavier hairline than its scaled neighbours.
+              const slot = GRID[cell]
               const k = 1 / slot.scale
               return (
                 <motion.div
-                  key={`extra-${i}`}
+                  key={`spare-${cell}`}
                   className="absolute top-0 left-0 overflow-hidden border-white bg-[var(--color-shapes-grey)]"
                   style={{
                     width: BASE_W,
@@ -314,7 +397,7 @@ export function HeadshotShowcase({
                       : { duration: 0.45, delay: 0.12 + i * 0.06, ease: [0.32, 0.72, 0, 1] }
                   }
                 >
-                  <PhotoTile src={gridPhotos[3 + i]} />
+                  <PhotoTile src={gridPhotos[cell]} />
                 </motion.div>
               )
             })}

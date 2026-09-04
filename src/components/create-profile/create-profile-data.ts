@@ -1,10 +1,9 @@
 /**
  * Static data for the /create-profile route.
  *
- * The photo pools are drawn from the project's existing `/public/mock` library
- * plus the four headshots exported from the Figma frame (6607:9587). They are
- * split by gender first, then by style, because both selectors drive the
- * showcase: changing gender swaps the whole pool, changing style re-slices it.
+ * The photo pools come from `public/create-profile`, which holds one folder per
+ * style-and-gender combination. Both selectors drive the showcase: changing
+ * gender swaps the whole pool, changing style re-slices it.
  */
 
 export type GenderId = 'male' | 'female' | 'other'
@@ -46,40 +45,71 @@ export const STYLE_OPTIONS: StyleOption[] = [
   },
 ]
 
-// Only head-and-shoulders frames are listed. The /mock/outfits set is flat-lay
-// and full-body product shots — at tile size the face disappears, so it is out.
+const DIR = '/create-profile'
+
+/**
+ * Filenames exactly as they sit on disk under `public/create-profile/<folder>`.
+ * Some carry spaces, so URLs are built with encodeURIComponent rather than
+ * written out by hand.
+ */
+const FILES = {
+  'professional-male': [
+    '2a2eacb518b35884.jpeg',
+    'e7a2ec7ea5189c7f.jpeg',
+    'ec07d8e90b5052dc.jpeg',
+    'professional 01.png',
+    'professional 02.png',
+    'professional 03.png',
+    'professional 04.png',
+    'professional 05.png',
+  ],
+  'professional-female': [
+    '00016d5d15ccee07.jpeg',
+    '1c78c5729757e8af.jpeg',
+    '228545ef8747cd52.jpeg',
+    '563238108a81edfb.jpeg',
+    '674c44afc703577f.jpeg',
+    'ba6b5ae891eb29b2.jpeg',
+    'bf1c2071c3cf54f4.jpeg',
+    'e4e58b27c7e00429.jpeg',
+    'e9618293ffaa7761.jpeg',
+    'eac8347c13f70347.jpeg',
+    'fd619d4f7dae3e46.jpeg',
+  ],
+  'casual-male': [
+    '211178fd4eee9a51.jpeg',
+    '82c302a2ab2c726b.jpeg',
+    'a42e501aa4ccf4bd.jpeg',
+    'casual 01.png',
+    'casual 02.png',
+    'casual 03.png',
+    'casual 04.png',
+    'casual 05.png',
+  ],
+  'casual-female': [
+    '20bcf5e979d72454.jpeg',
+    '210556acc0ae9f02.jpeg',
+    '4f5aba0de2012a8d.jpeg',
+    '56156a17daac2c37.jpeg',
+    '5e3525c914922343.jpeg',
+    '73885ea970de3938.jpeg',
+    'e498b5a8d59b0a21.jpeg',
+    'e90f072de2dc7e36.jpeg',
+  ],
+} as const
+
+function urls(folder: keyof typeof FILES): string[] {
+  return FILES[folder].map((f) => `${DIR}/${folder}/${encodeURIComponent(f)}`)
+}
+
 const MALE = {
-  professional: [
-    '/mock/faces/face-04.jpg',
-    '/mock/faces/face-09.jpg',
-    '/mock/renders/render-05.jpg',
-    '/mock/renders/render-01.jpg',
-    '/mock/faces/category-professional.avif',
-    '/mock/faces/face-02.jpg',
-  ],
-  casual: [
-    '/mock/create-profile/male-garden-shirt.jpg',
-    '/mock/faces/face-06.jpg',
-    '/mock/create-profile/male-navy-sweater.jpg',
-    '/mock/renders/render-03.jpg',
-    '/mock/faces/face-11.jpg',
-    '/mock/faces/category-social.avif',
-    '/mock/faces/face-07.jpg',
-  ],
+  professional: urls('professional-male'),
+  casual: urls('casual-male'),
 }
 
 const FEMALE = {
-  professional: [
-    '/mock/create-profile/female-rooftop-black.jpg',
-    '/mock/renders/render-02.jpg',
-    '/mock/faces/face-08.jpg',
-    '/mock/renders/render-06.jpg',
-  ],
-  casual: [
-    '/mock/renders/render-04.jpg',
-    '/mock/faces/face-10.jpg',
-    '/mock/faces/face-12.jpg',
-  ],
+  professional: urls('professional-female'),
+  casual: urls('casual-female'),
 }
 
 /** Interleave two lists so "mix" alternates professional / casual. */

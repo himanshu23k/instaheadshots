@@ -11,17 +11,35 @@
  * rounded `overflow:hidden` ancestor, and the whole strip would sit frozen.
  * The period is known exactly, so there is nothing to resolve at runtime.
  */
-import { motion, useReducedMotion } from 'motion/react'
-import { AnimatePresence } from 'motion/react'
+import { useEffect, useRef } from 'react'
+import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion } from 'motion/react'
+import type { AnimationPlaybackControlsWithThen } from 'motion/react'
 import { photosFor, type GenderChoice, type StyleOption } from './create-profile-data'
 
 const TILE = 70
 const GAP = 4
+/** Centre-to-centre distance between tiles. */
+const PITCH = TILE + GAP
 /** Enough tiles that the loop never shows its seam on a 342px card. */
 const STRIP_LENGTH = 8
 /** One full loop: the strip is rendered twice, so this is exactly half of it. */
-const PERIOD = STRIP_LENGTH * (TILE + GAP)
+const PERIOD = STRIP_LENGTH * PITCH
 const PX_PER_SECOND = 34
+/** A tile clipped by less than this counts as fully visible. */
+const SNAP_SLACK = 1.5
+
+/**
+ * Where a stopping strip should come to rest.
+ *
+ * The strip halts on a tile boundary, not wherever the frame happened to land:
+ * whichever tile is the first *completely* visible one becomes the first
+ * element, and any tile only partly in view slides out of the card.
+ */
+function restingOffset(current: number): number {
+  const travelled = -current
+  const tiles = Math.ceil((travelled - SNAP_SLACK) / PITCH)
+  return -Math.max(0, tiles) * PITCH
+}
 
 function StripTile({ src }: { src: string }) {
   return (
@@ -36,6 +54,7 @@ function StripTile({ src }: { src: string }) {
           alt=""
           aria-hidden
           draggable={false}
+          decoding="async"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -65,6 +84,34 @@ export function MobileStyleCard({
   // remounting half the strip underneath it.
   const tiles = [...photos, ...photos]
   const running = selected && !reduceMotion
+
+  const x = useMotionValue(0)
+  const playback = useRef<AnimationPlaybackControlsWithThen | null>(null)
+
+  useEffect(() => {
+    playback.current?.stop()
+
+    if (running) {
+      // Pick the loop up from wherever the strip is sitting. Offsets a whole
+      // period apart are visually identical, so normalising here keeps the
+      // numbers small without the strip appearing to jump.
+      const from = x.get() % PERIOD
+      x.set(from)
+      playback.current = animate(x, from - PERIOD, {
+        duration: PERIOD / PX_PER_SECOND,
+        ease: 'linear',
+        repeat: Infinity,
+        repeatType: 'loop',
+      })
+    } else {
+      const target = restingOffset(x.get())
+      if (Math.abs(target - x.get()) > 0.01) {
+        playback.current = animate(x, target, { duration: 0.45, ease: [0.22, 1, 0.36, 1] })
+      }
+    }
+
+    return () => playback.current?.stop()
+  }, [running, x])
 
   return (
     <div
@@ -98,20 +145,7 @@ export function MobileStyleCard({
           className="flex"
           // An explicit width, not `max-content` — one less thing for the
           // engine to resolve before the transform means anything.
-          style={{ width: PERIOD * 2, backfaceVisibility: 'hidden' }}
-          animate={running ? { x: [0, -PERIOD] } : { x: 0 }}
-          transition={
-            running
-              ? {
-                  duration: PERIOD / PX_PER_SECOND,
-                  ease: 'linear',
-                  repeat: Infinity,
-                  repeatType: 'loop',
-                }
-              : // Picking a different card stops this one — glide the strip
-                // home rather than snapping it back mid-scroll.
-                { duration: 0.4, ease: 'easeOut' }
-          }
+          style={{ width: PERIOD * 2, x, backfaceVisibility: 'hidden' }}
         >
           {tiles.map((src, i) => (
             <StripTile key={`${i}-${src}`} src={src} />
