@@ -72,17 +72,18 @@ const V1 = (() => {
 const V2 = (() => {
   const w = WIDTH
   const at = placer(w, w)
-  const cell = 156
-  const pitch = cell + 10
-  const sideInset = (w - (3 * cell + 2 * 10)) / 2 // 54, centring the grid across
+  const gutter = 10
+  // The grid fills the same square the frame does, so it is a subdivision of
+  // it rather than a smaller block floating inside: three columns edge to
+  // edge, which keeps the 24px between the two sections in both states.
+  const cell = (w - 2 * gutter) / 3
+  const pitch = cell + gutter
   return {
     base: { w, h: w },
     design: { w: WIDTH, h: w },
     heroes: [at(0, 0, w, w)],
-    // Top row flush with the frame it replaces, so both states start level
-    // with the top of the form card opposite.
     grid: Array.from({ length: 9 }, (_, i) =>
-      at(sideInset + (i % 3) * pitch, Math.floor(i / 3) * pitch, cell, cell),
+      at((i % 3) * pitch, Math.floor(i / 3) * pitch, cell, cell),
     ),
     heading: false,
     // No heading to carry, so nothing should push the photo down at all.
