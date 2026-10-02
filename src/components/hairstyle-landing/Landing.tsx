@@ -270,7 +270,7 @@ const PROMISE_ICON = { gift: Gift, user: UserRound, trash: Trash2 }
 
 function Promises({ onPick }: { onPick: () => void }) {
   return (
-    <section className="pt-20 text-center md:pt-[120px]">
+    <section className="relative z-10 pt-20 text-center md:pt-[120px]">
       <Container>
         <Display>
           Your photo is yo<Serif>u</Serif>rs

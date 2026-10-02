@@ -109,14 +109,22 @@ export function Reviews() {
   const move = (d: 1 | -1) => setOffset((o) => (((o + d * step) % n) + n) % n)
 
   return (
-    <section aria-label="Customer reviews" className="relative mt-[120px] md:mt-[160px] lg:mt-[180px]" style={FONT}>
-      {/* phones: the glow sits behind the page, no panel */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[1280px] overflow-hidden md:h-[889px] lg:hidden">
+    <section aria-label="Customer reviews" className="relative isolate mt-[120px] md:mt-[160px] lg:mt-[180px]" style={FONT}>
+      {/* phones: no panel; a smaller glow sits just behind the cards, faded at its top and bottom
+          and kept inside this section so it never washes over the next one */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-6 top-[180px] overflow-hidden md:top-[160px] lg:hidden"
+        style={{
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, #000 22%, #000 70%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, transparent 0%, #000 22%, #000 70%, transparent 100%)',
+        }}
+      >
         <img
           src={BRAND.reviews.glow}
           alt=""
           loading="lazy"
-          className="absolute left-[-1736px] top-[333px] h-[947px] w-[2356px] max-w-none md:left-[-96.5%] md:top-[31px] md:h-[858px] md:w-[210%]"
+          className="absolute left-1/2 top-1/2 h-[78%] w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-70 md:w-[120%]"
         />
       </div>
 
