@@ -621,16 +621,19 @@ export function CollectionSheet({ route }: { route: Route<'collection'> }) {
     return filter === 'all' ? all : all.filter((g) => g.tags?.includes(filter))
   }, [filter, route.slot])
 
-  const confirm = () => {
-    if (!selected) return
-    const g = byId(selected)
-    if (route.slot) {
+  const confirm = () => selected && pushSheet({ name: 'try', garments: [byId(selected)] })
+
+  // Filling a builder slot, a tap adds the piece straight away (after a beat to show it picked).
+  const tap = (id: string) => {
+    if (!route.slot) return setSelected((s) => (s === id ? null : id))
+    if (selected) return
+    setSelected(id)
+    window.setTimeout(() => {
+      const g = byId(id)
       setDraftPiece(g)
       setBuilderNotice(`${g.name} added`)
       returnToBuilder()
-    } else {
-      pushSheet({ name: 'try', garments: [g] })
-    }
+    }, 220)
   }
 
   return (
@@ -671,17 +674,19 @@ export function CollectionSheet({ route }: { route: Route<'collection'> }) {
                 garment={g}
                 height={163}
                 selected={selected === g.id}
-                onClick={() => setSelected((s) => (s === g.id ? null : g.id))}
+                onClick={() => tap(g.id)}
               />
             ))}
           </div>
         )}
       </SheetScroll>
-      <SheetFooter shadow>
-        <PrimaryButton disabled={!selected} onClick={confirm}>
-          {route.slot ? 'Add item' : 'Continue'}
-        </PrimaryButton>
-      </SheetFooter>
+      {!route.slot && (
+        <SheetFooter shadow>
+          <PrimaryButton disabled={!selected} onClick={confirm}>
+            Continue
+          </PrimaryButton>
+        </SheetFooter>
+      )}
     </>
   )
 }

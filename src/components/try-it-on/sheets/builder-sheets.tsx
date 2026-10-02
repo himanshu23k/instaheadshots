@@ -210,14 +210,19 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
 
   const suggestions = SLOT_SUGGESTIONS[slot].map(byId)
   const hasMore = COLLECTION.some((id) => byId(id).slot === slot && !SLOT_SUGGESTIONS[slot].includes(id))
-  const changed = !!selected && selected !== current?.id
 
-  const add = () => {
-    if (!selected) return
-    const g = byId(selected)
-    setDraftPiece(g)
-    setBuilderNotice(`${g.name} added`)
-    returnToBuilder()
+  // Tapping a piece adds it straight away — the tile shows as picked for a beat, then
+  // the sheet hands back to the builder. Tapping what's already there just goes back.
+  const pick = (id: string) => {
+    if (selected && selected !== current?.id) return
+    setSelected(id)
+    if (id === current?.id) return returnToBuilder()
+    window.setTimeout(() => {
+      const g = byId(id)
+      setDraftPiece(g)
+      setBuilderNotice(`${g.name} added`)
+      returnToBuilder()
+    }, 220)
   }
 
   return (
@@ -253,7 +258,7 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
                 garment={g}
                 height={163}
                 selected={selected === g.id}
-                onClick={() => setSelected((s) => (s === g.id ? null : g.id))}
+                onClick={() => pick(g.id)}
               />
             ))}
           </div>
@@ -270,20 +275,6 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
           )}
         </div>
       </SheetScroll>
-      <AnimatePresence initial={false}>
-        {changed && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <SheetFooter shadow>
-              <PrimaryButton onClick={add}>Add item</PrimaryButton>
-            </SheetFooter>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   )
 }

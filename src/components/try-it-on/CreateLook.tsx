@@ -210,9 +210,10 @@ export function CreateLook() {
     <motion.div
       className="absolute inset-0 z-30 flex flex-col overflow-hidden bg-white"
       style={{ ...FONT, transformOrigin: 'top center' }}
-      initial={{ y: '100%' }}
-      animate={{ y: sheetOpen ? 10 : 0, scale: sheetOpen ? 0.94 : 1, borderRadius: sheetOpen ? 12 : 0 }}
-      exit={{ y: '100%' }}
+      // Pushed in from the right like any deeper screen (the back arrow takes it back out).
+      initial={{ x: '100%' }}
+      animate={{ x: 0, y: sheetOpen ? 10 : 0, scale: sheetOpen ? 0.94 : 1, borderRadius: sheetOpen ? 12 : 0 }}
+      exit={{ x: '100%' }}
       transition={{ duration: 0.42, ease: EASE }}
     >
       {/* Same header as the studio: back and credits. */}
