@@ -14,8 +14,9 @@ import { FONT } from './tokens'
  * (slot builder, items found, tap-to-swap) follows the "Complete the Look
  * Journeys" Claude Design doc, option 4a → 2a → 1b.
  *
- * Query params for reaching every state: `?version=1|2` picks the Complete
- * the Look builder (1: slot-list sheet, 2: Doji-style Create Look page);
+ * Query params for reaching every state: `?version=1|2|3` picks the outfit
+ * flow (1: Pick an outfit + slot-list Complete the Look, 2: Doji-style Create
+ * Look page, 3: one outfit sheet that both starts and completes the look);
  * `?user_type=new|repeat` picks a
  * first-time user (intro, no history) or a returning one (16 past trials, no
  * intro); `?splash=0` skips the intro,

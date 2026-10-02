@@ -13,7 +13,7 @@ const LINE = '#EFEFEF'
 // ── Ghost silhouettes for empty slots ────────────────────────────────────────
 
 /** Soft white stand-ins for an empty slot, drawn so they read as "put something here". */
-function GhostArt({ kind }: { kind: Slot }) {
+export function GhostArt({ kind }: { kind: Slot }) {
   const shapes: Partial<Record<Slot, React.ReactNode>> = {
     top: <path d="M62 44 86 33q14 14 28 0l24 11 32 30-20 22-12-9v83H66V87l-12 9-20-22Z" />,
     bottom: <path d="M66 28h68l12 150h-36l-10-104-10 104H54Z" />,

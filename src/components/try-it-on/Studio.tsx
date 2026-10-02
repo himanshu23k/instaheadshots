@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, Heart, RotateCcw, Share } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { currentLook, useTryItOnStore, type Look } from '@/store/try-it-on-store'
+import { VERSION, currentLook, useTryItOnStore, type Look } from '@/store/try-it-on-store'
 import { GENERATING_STEPS, SLOT_LABEL, type Slot } from './try-it-on-data'
 import { CreditsIcon, Credits, EditIcon, Notice, PrimaryButton, Spinner } from './ui'
 import { C, FONT } from './tokens'
@@ -107,6 +107,7 @@ function LookCard({
   const tryOn = useTryItOnStore((s) => s.tryOn)
   const toggleFavorite = useTryItOnStore((s) => s.toggleFavorite)
   const showBanner = useTryItOnStore((s) => s.showBanner)
+  const openBuilder = useTryItOnStore((s) => s.openBuilder)
   const refreshing = isBase && phase === 'refreshing-base'
   const full = look.render.framing === 'full'
   const hotspots = Object.entries(look.render.hotspots ?? {}).filter(([slot]) =>
@@ -220,7 +221,14 @@ function LookCard({
                 Tap a piece to swap it
               </span>
               {hotspots.map(([slot, p]) => (
-                <Hotspot key={slot} slot={slot} x={p.x} y={p.y} onClick={() => openSheet({ name: 'swap', slot })} />
+                <Hotspot
+                  key={slot}
+                  slot={slot}
+                  x={p.x}
+                  y={p.y}
+                  // v3 swaps in the same outfit sheet, opened on that slot.
+                  onClick={() => (VERSION === 3 ? openBuilder(slot) : openSheet({ name: 'swap', slot }))}
+                />
               ))}
             </>
           )}
@@ -653,7 +661,7 @@ export function Studio({ onBack }: { onBack: () => void }) {
     onClick: () => void
   }
   if (view.name === 'look') {
-    cta = { label: 'Complete the Look', disabled: false, onClick: openBuilder }
+    cta = { label: 'Complete the Look', disabled: false, onClick: () => openBuilder() }
   } else if (view.name === 'pending') {
     cta = {
       label: genFrom === 'base' ? 'Pick an Outfit' : 'Complete the Look',
@@ -665,7 +673,8 @@ export function Studio({ onBack }: { onBack: () => void }) {
       label: 'Pick an Outfit',
       disabled: phase === 'refreshing-base',
       hidden: view.panel === 1,
-      onClick: () => openSheet({ name: 'pick' }),
+      // v3 starts in the same outfit sheet that later completes the look.
+      onClick: () => (VERSION === 3 ? openBuilder('for-you') : openSheet({ name: 'pick' })),
     }
   }
 

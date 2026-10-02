@@ -373,3 +373,33 @@ export const SPLASH_LOOKS = [
   { model: `${A}/s-pink.png`, left: `${A}/s-pink-garment.png`, right: `${A}/s-brown-dress-garment.jpg` },
   { model: `${A}/s-brown-dress.png`, left: `${A}/s-pink-garment.png`, right: `${A}/s-denim-dress-garment.png` },
 ]
+
+/** What the new piece does to the photo, worded as in Figma. */
+export function framingHint(pieces: Garment[], added: Garment[]): string | null {
+  if (added.some((p) => p.slot === 'dress'))
+    return 'Replaces your top and bottoms. This photo will be full body, so you can see the whole outfit.'
+  const wasWaistUp = !pieces.some((p) => p.slot === 'dress' || (p.slot === 'bottom' && p.source !== 'base'))
+  if (wasWaistUp && added.some((p) => p.slot === 'bottom'))
+    return 'Completes your look by adding a bottom. This photo will be full body, so you can see the whole outfit.'
+  const layered = added.find((p) => p.slot === 'outerwear')
+  if (layered) {
+    const under = pieces.find((p) => p.slot === 'dress') ?? pieces.find((p) => p.slot === 'top')
+    if (under && under.source !== 'base') return `This will get added onto your ${under.name}`
+  }
+  return null
+}
+
+/**
+ * v3 "Style me": whole outfits whose pieces go together. The first few match a
+ * pre-rendered look exactly, so trying them on shows the real result.
+ */
+export const STYLE_COMBOS: { id: string; name: string; pieces: string[] }[] = [
+  { id: 'weekend-check', name: 'Weekend Check', pieces: ['checks-shirt', 'denim-jeans'] },
+  { id: 'denim-on-denim', name: 'Denim on Denim', pieces: ['denim-dress', 'denim-jacket'] },
+  { id: 'blue-crew', name: 'Blue Crew', pieces: ['blue-sweatshirt', 'denim-jeans'] },
+  { id: 'check-and-leather', name: 'Check & Leather', pieces: ['checks-shirt', 'leather-jacket'] },
+  { id: 'sunday-dress', name: 'Sunday Dress', pieces: ['denim-dress'] },
+  { id: 'office-ready', name: 'Office Ready', pieces: ['knitwear', 'office-pants', 'brown-blazer'] },
+  { id: 'night-out', name: 'Night Out', pieces: ['strips-shrug', 'mini-skirt', 'leather-jacket'] },
+  { id: 'easy-layers', name: 'Easy Layers', pieces: ['blue-sweatshirt', 'grey-joggers', 'brown-jacket'] },
+]

@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useDragControls } from 'motion/react'
 import { ArrowLeft, X } from 'lucide-react'
-import { useTryItOnStore, type SheetRoute } from '@/store/try-it-on-store'
+import { VERSION, useTryItOnStore, type SheetRoute } from '@/store/try-it-on-store'
 import { Credits } from './ui'
 import { C, FONT } from './tokens'
 import { CollectionSheet, LinkSheet, PickSheet, TrySheet, UploadPiecesSheet, UploadSheet } from './sheets/pick-sheets'
 import { BuilderSheet, FoundSheet, NotFoundSheet, SlotSheet, SwapSheet } from './sheets/builder-sheets'
+import { OutfitSheet } from './sheets/outfit-sheet'
 import { CreditsSheet, GuidelinesSheet, RedoSheet, RedoUploadSheet } from './sheets/account-sheets'
 
 const EASE = [0.32, 0.72, 0, 1] as const
@@ -25,7 +26,8 @@ function SheetBody({ route }: { route: SheetRoute }) {
     case 'collection':
       return <CollectionSheet route={route} />
     case 'builder':
-      return <BuilderSheet />
+      // v3 picks and completes in one outfit sheet; v1 completes in the slot list.
+      return VERSION === 3 ? <OutfitSheet route={route} /> : <BuilderSheet />
     case 'slot':
       return <SlotSheet route={route} />
     case 'found':

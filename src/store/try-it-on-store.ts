@@ -31,7 +31,8 @@ export type SheetRoute =
   | { name: 'upload'; slot?: Slot; toBuilder?: boolean }
   | { name: 'upload-pieces'; sample: UploadSample; image: string }
   | { name: 'collection'; slot?: Slot }
-  | { name: 'builder' }
+  /** v3 opens it on a tab (a slot, or For you); v1 ignores it. */
+  | { name: 'builder'; tab?: OutfitTab }
   | { name: 'slot'; slot: Slot }
   | { name: 'found'; slot?: Slot; image: string; items: FoundItem[]; title: string }
   | { name: 'not-found'; slot: Slot; image: string }
@@ -128,10 +129,15 @@ export const USER_TYPE: 'new' | 'repeat' = params.get('user_type') === 'repeat' 
 
 /**
  * `?version=1` (the default) completes the look in the slot-list sheet.
- * `?version=2` opens the full-screen "Create Look" grid, after Doji. Other
- * versions aren't designed yet and fall back to 1.
+ * `?version=2` opens the full-screen "Create Look" grid, after Doji.
+ * `?version=3` merges picking and completing into one outfit sheet: the same
+ * tray of slots starts a look and completes it. Other versions fall back to 1.
  */
-export const VERSION: 1 | 2 = params.get('version') === '2' ? 2 : 1
+const versionParam = params.get('version')
+export const VERSION: 1 | 2 | 3 = versionParam === '2' ? 2 : versionParam === '3' ? 3 : 1
+
+/** v3 outfit sheet tabs: For you, then one per slot. */
+export type OutfitTab = 'for-you' | Slot
 
 /** Slots "Style Me" fills — the ones we have catalog pieces for. */
 const STYLE_ME_SLOTS: Slot[] = ['top', 'bottom', 'outerwear']
@@ -208,7 +214,7 @@ export type TryItOnState = {
   refreshBase: () => void
   buyCredits: (credits: number) => void
 
-  openBuilder: () => void
+  openBuilder: (tab?: OutfitTab) => void
   closeBuilder: () => void
   toggleLock: (slot: Slot) => void
   styleMe: () => void
@@ -216,6 +222,8 @@ export type TryItOnState = {
   undoReplace: (slot: Slot) => void
   /** Take a piece out of the draft — that slot falls back to the base. */
   removeDraftSlot: (slot: Slot) => void
+  /** Swap the whole draft for these pieces (v3 Style me, and its undo). */
+  setDraftPieces: (pieces: Garment[]) => void
   draftChanged: () => boolean
 
   reset: () => void
@@ -327,7 +335,18 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
     }))
   },
 
-  createNewLook: () => set({ view: { name: 'home', panel: 0 }, sheets: [{ name: 'pick' }] }),
+  // v3 starts a new look in the same outfit sheet, empty (everything is the base).
+  createNewLook: () =>
+    set((st) =>
+      VERSION === 3
+        ? {
+            view: { name: 'home', panel: 0 },
+            draft: toDraft(st.base.pieces),
+            builderNotice: null,
+            sheets: [{ name: 'builder', tab: 'for-you' }],
+          }
+        : { view: { name: 'home', panel: 0 }, sheets: [{ name: 'pick' }] },
+    ),
 
   refreshBase: () => {
     clearTimers()
@@ -349,11 +368,11 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       bannerKey: st.bannerKey + 1,
     })),
 
-  openBuilder: () =>
+  openBuilder: (tab) =>
     set((st) =>
       VERSION === 2
         ? { draft: toDraft(currentLook(st).pieces), builderNotice: null, builderOpen: true, sheets: [] }
-        : { draft: toDraft(currentLook(st).pieces), builderNotice: null, sheets: [{ name: 'builder' }] },
+        : { draft: toDraft(currentLook(st).pieces), builderNotice: null, sheets: [{ name: 'builder', tab }] },
     ),
 
   closeBuilder: () => set({ builderOpen: false, sheets: [], builderNotice: null }),
@@ -421,6 +440,9 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       delete locked[slot]
       return { draft: { pieces, replaced, locked } }
     }),
+
+  setDraftPieces: (pieces) =>
+    set({ draft: { pieces: Object.fromEntries(pieces.map((p) => [p.slot, p])), replaced: {}, locked: {} } }),
 
   draftChanged: () => {
     const s = get()
