@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { AnimatePresence, motion, useDragControls, type PanInfo } from 'motion/react'
 import { X } from 'lucide-react'
 import { FLOW_SCROLL_ID, SCROLL_ID, useHairstyleLandingStore, type Screen } from '@/store/hairstyle-landing-store'
@@ -15,8 +15,12 @@ import { C, FONT } from './tokens'
  */
 
 const EASE = [0.32, 0.72, 0, 1] as const
+/** One spring for the panel's width and height, so it morphs as a single shape between steps. */
+const MORPH = { type: 'spring', stiffness: 150, damping: 24, mass: 1 } as const
 type ModalScreen = 'check' | 'sampling' | 'pay'
-const WIDTH: Record<ModalScreen, number> = { check: 760, sampling: 560, pay: 520 }
+// The photo check opens narrow (just the photo) and widens once the catalog choice comes in.
+const WIDTH: Record<ModalScreen, number> = { check: 560, sampling: 560, pay: 520 }
+const CHOOSE_WIDTH = 760
 const isModal = (s: Screen): s is ModalScreen => s in WIDTH
 
 const desktopQuery = '(min-width: 768px)'
@@ -30,6 +34,37 @@ function useIsDesktop() {
     () => window.matchMedia(desktopQuery).matches,
     () => true,
   )
+}
+
+/**
+ * The panel's height follows its content: the header plus the step's natural
+ * height, capped to the viewport (beyond that the body scrolls). Measured, not
+ * left to `auto`, so it can animate.
+ */
+function usePanelHeight(open: boolean, desktop: boolean) {
+  const headerRef = useRef<HTMLDivElement>(null)
+  const sizerRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    if (!open) return
+    const header = headerRef.current
+    const sizer = sizerRef.current
+    if (!header || !sizer) return
+    const measure = () => {
+      const max = desktop ? Math.min(880, window.innerHeight - 48) : window.innerHeight * 0.94
+      setHeight(Math.min(Math.ceil(header.offsetHeight + sizer.offsetHeight), Math.floor(max)))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(header)
+    ro.observe(sizer)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [open, desktop])
+  return { headerRef, sizerRef, height }
 }
 
 function Step({ screen, onPick }: { screen: Screen; onPick: () => void }) {
@@ -63,9 +98,12 @@ export function FlowModal({ onPick }: { onPick: () => void }) {
   const screen = useHairstyleLandingStore((s) => s.screen)
   const reset = useHairstyleLandingStore((s) => s.reset)
   const backToOffer = useHairstyleLandingStore((s) => s.backToOffer)
+  const choosing = useHairstyleLandingStore((s) => s.choosing)
   const desktop = useIsDesktop()
   const drag = useDragControls()
   const open = isModal(screen)
+  const { headerRef, sizerRef, height } = usePanelHeight(open, desktop)
+  const width = screen === 'check' && choosing ? CHOOSE_WIDTH : isModal(screen) ? WIDTH[screen] : 600
   // Closing checkout returns to the offer; closing the early steps abandons the run.
   // The free style can't be abandoned mid-generation: no ✕, and backdrop, Escape and drag do nothing.
   const dismissible = screen !== 'sampling'
@@ -95,7 +133,7 @@ export function FlowModal({ onPick }: { onPick: () => void }) {
 
   const body = (
     <>
-      <div className="flex shrink-0 items-center justify-between px-4 pb-1 pt-4 md:px-5 md:pt-5">
+      <div ref={headerRef} className="flex shrink-0 items-center justify-between px-4 pb-1 pt-4 md:px-5 md:pt-5">
         <span className="size-[40px]" />
         {dismissible ? (
           <IconButton onClick={close} label="Close">
@@ -105,18 +143,20 @@ export function FlowModal({ onPick }: { onPick: () => void }) {
           <span className="size-[40px]" />
         )}
       </div>
-      <div id={FLOW_SCROLL_ID} className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8 md:px-[40px] md:pb-[40px]">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={screen}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.22, ease: EASE }}
-          >
-            <Step screen={screen} onPick={onPick} />
-          </motion.div>
-        </AnimatePresence>
+      <div id={FLOW_SCROLL_ID} className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {/* natural height of the step, measured to size the panel */}
+        <div ref={sizerRef} className="px-5 pb-8 md:px-[40px] md:pb-[40px]">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={screen}
+              initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.32, ease: EASE } }}
+              exit={{ opacity: 0, y: -8, filter: 'blur(6px)', transition: { duration: 0.16, ease: 'easeIn' } }}
+            >
+              <Step screen={screen} onPick={onPick} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </>
   )
@@ -145,10 +185,10 @@ export function FlowModal({ onPick }: { onPick: () => void }) {
               aria-modal="true"
               aria-label="Hairstyle try-on"
               className="relative flex max-h-[min(880px,calc(100dvh-48px))] w-full flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(0,4,9,0.28)]"
-              initial={{ opacity: 0, scale: 0.96, y: 16, maxWidth: WIDTH[screen as ModalScreen] }}
-              animate={{ opacity: 1, scale: 1, y: 0, maxWidth: WIDTH[screen as ModalScreen] ?? 600 }}
+              initial={{ opacity: 0, scale: 0.96, y: 16, maxWidth: width }}
+              animate={{ opacity: 1, scale: 1, y: 0, maxWidth: width, ...(height != null && { height }) }}
               exit={{ opacity: 0, scale: 0.97, y: 10 }}
-              transition={{ duration: 0.4, ease: EASE }}
+              transition={{ default: { duration: 0.4, ease: EASE }, maxWidth: MORPH, height: MORPH }}
             >
               {body}
             </motion.div>
@@ -159,9 +199,9 @@ export function FlowModal({ onPick }: { onPick: () => void }) {
               aria-label="Hairstyle try-on"
               className="relative flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-[24px] bg-white"
               initial={{ y: '100%' }}
-              animate={{ y: 0 }}
+              animate={{ y: 0, ...(height != null && { height: height + 16 }) }}
               exit={{ y: '100%' }}
-              transition={{ duration: 0.45, ease: EASE }}
+              transition={{ default: { duration: 0.45, ease: EASE }, height: MORPH }}
               drag="y"
               dragListener={false}
               dragControls={drag}

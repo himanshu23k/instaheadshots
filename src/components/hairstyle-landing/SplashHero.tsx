@@ -56,11 +56,20 @@ const EASE_OUT: Bezier = [0.22, 1, 0.36, 1]
 const EASE_IN_OUT: Bezier = [0.65, 0, 0.35, 1]
 
 /**
- * The stage clips along its bottom edge only (like the bottom of the Figma phone
- * frame): hearts, glows and the wheel's frosted disc are free to spill out of
+ * Only the wheel reaches below the caption, so only the wheel is clipped, at
+ * the stage's bottom edge (frame y 650, like the bottom of the Figma phone
+ * frame). Everything else, hearts and glows included, is free to spill out of
  * the top and sides.
+ *
+ * Earlier the whole scaled stage carried `clip-path: inset(-100vh -100vw 0
+ * -100vw)`. On iPhone Safari that blew the composited layer up far past the
+ * screen (it also holds a backdrop blur, blurred glows and blend modes), and
+ * the hero stopped repainting on its first frame. These clips are small, in px,
+ * and sit on the wheel's own layers.
  */
-const CLIP_BOTTOM_ONLY = 'inset(-100vh -100vw 0 -100vw)'
+const STAGE_BOTTOM = TOP + H // frame y where the stage ends
+const WHEEL_CLIP = `inset(-160px -200px ${FRAME_H - STAGE_BOTTOM}px -200px)` // wheel layer spans the whole 735 frame
+const BACKDROP_CLIP = `inset(0 0 ${438 + 562 - STAGE_BOTTOM}px 0)` // frosted disc: 562px circle from frame y 438
 
 const tr = (instant: boolean, o: Transition): Transition => (instant ? { duration: 0 } : o)
 
@@ -205,6 +214,8 @@ function WheelBackdrop({ phase, instant }: { phase: Phase; instant: boolean }) {
         zIndex: 8,
         backdropFilter: 'blur(50px)',
         WebkitBackdropFilter: 'blur(50px)',
+        clipPath: BACKDROP_CLIP,
+        WebkitClipPath: BACKDROP_CLIP,
       }}
       {...wheelMotion(phase, instant)}
     />
@@ -238,7 +249,7 @@ function Wheel({ phase, instant, gender }: { phase: Phase; instant: boolean; gen
   return (
     <motion.div
       className="pointer-events-none absolute inset-0"
-      style={{ zIndex: 9 }}
+      style={{ zIndex: 9, clipPath: WHEEL_CLIP, WebkitClipPath: WHEEL_CLIP }}
       {...wheelMotion(phase, instant)}
     >
       <img alt="" src={S + 'pointer-shadow.svg'} className="absolute block max-w-none" style={{ left: 178, top: 434, maskImage: FLAP_MASK, WebkitMaskImage: FLAP_MASK }} />
@@ -681,7 +692,7 @@ export function SplashHero({ gender, maxScale = 1.15, className }: { gender: Spl
     <div ref={ref} className={cn('relative w-full', className)} style={{ height: H * scale }}>
       <div
         className="absolute left-1/2 top-0"
-        style={{ width: W, height: H, transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'top center', clipPath: CLIP_BOTTOM_ONLY }}
+        style={{ width: W, height: H, transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'top center' }}
         aria-hidden
       >
         {/* Reduced motion: hold the first finished style instead of looping. */}

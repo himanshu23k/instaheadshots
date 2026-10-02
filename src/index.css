@@ -670,9 +670,3 @@
   margin-top: -4px;
 }
 
-/* ── /hairstyle-landing ── */
-/* Gallery tile still generating. */
-@keyframes hl-sheen {
-  from { transform: translateX(-120%); }
-  to   { transform: translateX(220%); }
-}

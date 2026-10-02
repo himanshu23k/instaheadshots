@@ -435,11 +435,6 @@ export function Gallery() {
             <figure key={`${idx}-${pos}`} className="flex min-w-0 flex-col">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-[#E5E6E6]">
                 <Photo src={s.photo} pos={fx.pos} filter={isDone ? fx.filter : `${fx.filter} blur(11px) saturate(.85)`} className="transition-[filter] duration-500" />
-                {st === 'working' && (
-                  <div className="absolute inset-0 overflow-hidden" aria-hidden>
-                    <div className="absolute inset-y-0 w-[45%] animate-[hl-sheen_1.3s_linear_infinite] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent)]" />
-                  </div>
-                )}
                 {isDone && (
                   <a
                     href={s.photo ?? '#'}
@@ -452,15 +447,8 @@ export function Gallery() {
                   </a>
                 )}
               </div>
-              <figcaption className="mt-2 flex items-baseline justify-between gap-2" style={FONT}>
-                <span className="truncate text-[13px] leading-[16px]" style={{ fontWeight: 450, color: isDone ? C.text : C.secondary }}>
-                  {names[idx]}
-                </span>
-                {isDone && s.regenLeft > 0 && (
-                  <button type="button" onClick={() => s.regenTile(pos)} className="shrink-0 text-[12px] leading-[14px] underline underline-offset-2 transition-colors hover:text-[#000409]" style={{ fontWeight: 420, color: C.secondary }}>
-                    Redo
-                  </button>
-                )}
+              <figcaption className="mt-2 truncate text-[13px] leading-[16px]" style={{ ...FONT, fontWeight: 450, color: isDone ? C.text : C.secondary }}>
+                {names[idx]}
               </figcaption>
             </figure>
           )

@@ -61,12 +61,12 @@ const BURST = [
   { x: '46%', y: '-6%', s: 11, c: '#36C97E', d: 0.15 },
 ]
 
-function ScanPhoto({ photo, checks, verdict }: { photo: string | null; checks: Mark[]; verdict: 'pass' | 'fail' | null }) {
+function ScanPhoto({ photo, checks, verdict, className }: { photo: string | null; checks: Mark[]; verdict: 'pass' | 'fail' | null; className?: string }) {
   const reduce = useReducedMotion()
   const scanning = verdict === null
   const cleared = verdict === 'pass'
   return (
-    <div className="relative w-[112px] shrink-0 md:w-full">
+    <div className={cn('relative shrink-0', className)}>
       {/* rim of light once the photo clears */}
       <AnimatePresence>
         {cleared && (
@@ -186,7 +186,7 @@ function CheckIcon({ state }: { state: RowState }) {
  * passes, then settles on the result. Three pips keep count. Keeps the photo
  * column no taller than the catalog cards beside it.
  */
-function CheckTicker({ states, verdict }: { states: RowState[]; verdict: 'pass' | 'fail' | null }) {
+function CheckTicker({ states, verdict, className }: { states: RowState[]; verdict: 'pass' | 'fail' | null; className?: string }) {
   const running = states.findIndex((st) => st === 'running')
   const failed = states.findIndex((st) => st === 'failed')
   const lastPassed = states.lastIndexOf('passed')
@@ -201,7 +201,7 @@ function CheckTicker({ states, verdict }: { states: RowState[]; verdict: 'pass' 
         ? CHECK_COPY[i].failed
         : `${CHECK_COPY[i].running}…`
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-2.5 md:mt-4" aria-live="polite" style={FONT}>
+    <div className={cn('flex min-w-0 flex-1 items-center gap-2.5', className)} aria-live="polite" style={FONT}>
       <CheckIcon state={state} />
       <span className="relative h-[18px] min-w-0 flex-1 overflow-hidden">
         <AnimatePresence mode="popLayout" initial={false}>
@@ -308,11 +308,7 @@ function CatalogCard({ kind, title, body, fan, i }: { kind: CatalogKind; title: 
 
 function StatusLine({ catalogKind, verdict }: { catalogKind: CatalogKind | null; verdict: 'pass' | 'fail' | null }) {
   const starting = catalogKind && verdict === 'pass'
-  const text = starting
-    ? 'Starting your free style'
-    : catalogKind
-      ? 'Set chosen. We start the moment your photo clears.'
-      : 'Pick one and your free style starts by itself.'
+  const text = starting ? 'Starting your free style' : 'Pick one and your free style starts right away.'
   return (
     <div className="relative mt-4 h-[18px] overflow-hidden text-center" aria-live="polite" style={FONT}>
       <AnimatePresence mode="popLayout" initial={false}>
@@ -336,7 +332,7 @@ function StatusLine({ catalogKind, verdict }: { catalogKind: CatalogKind | null;
 // ── The step ────────────────────────────────────────────────────────────────
 
 function Failed({ onPick }: { onPick: () => void }) {
-  const { photo, fail, catalogKind } = useHairstyleLandingStore()
+  const { photo, fail } = useHairstyleLandingStore()
   if (!fail) return null
   return (
     <div data-screen-label="Photo check failed">
@@ -383,43 +379,96 @@ function Failed({ onPick }: { onPick: () => void }) {
       <div className="mt-7 flex flex-col items-center gap-3">
         <CTA onClick={onPick}>Choose a different photo</CTA>
         <p className="text-center text-[13px] leading-[16px]" style={{ ...FONT, fontWeight: 420, color: C.secondary }}>
-          {catalogKind ? 'We kept your style choice, so the next photo goes straight through.' : 'Your photo was not saved. Pick another and the checks run again.'}
+          Your photo was not saved. Pick another and the checks run again.
         </p>
       </div>
     </div>
   )
 }
 
+const LAYOUT = { type: 'spring', stiffness: 260, damping: 32 } as const
+
+/**
+ * Two beats. First the photo is checked on its own (narrow modal, photo
+ * centred). Only once it clears, after a moment to show it cleared, does the
+ * catalog choice come in: the modal widens, the photo glides to the left and
+ * the options arrive. A photo that fails goes straight to the failure screen,
+ * so options never appear and then get taken away.
+ */
 export function PhotoCheck({ onPick }: { onPick: () => void }) {
-  const { photo, checks, verdict, catalogKind } = useHairstyleLandingStore()
-  if (verdict === 'fail') return <Failed onPick={onPick} />
+  const { photo, checks, verdict, choosing, catalogKind } = useHairstyleLandingStore()
   const states = rowStates(checks, verdict)
 
+  if (verdict === 'fail') {
+    return (
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: EASE }}>
+        <Failed onPick={onPick} />
+      </motion.div>
+    )
+  }
+
   return (
-    <div data-screen-label="Photo check">
-      <StepHead
-        title={
-          <>
-            Which styles should we show y<Serif>o</Serif>u?
-          </>
-        }
-        body="One tap sets the catalog of 40 hairstyles. We are checking your photo while you choose."
-      />
+    <div data-screen-label={choosing ? 'Choose a catalog' : 'Photo check'}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={choosing ? 'choose' : 'check'}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25, ease: EASE }}
+        >
+          {choosing ? (
+            <StepHead
+              title={
+                <>
+                  Which styles should we show y<Serif>o</Serif>u?
+                </>
+              }
+              body="Your photo is clear. One tap sets the catalog of 40 hairstyles, and your free style starts right away."
+            />
+          ) : (
+            <StepHead
+              title={
+                <>
+                  Checking your pho<Serif>t</Serif>o
+                </>
+              }
+              body="Making sure we can read your face, the light and the detail. A few seconds."
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-      <div className="mt-7 grid items-start gap-5 md:mt-8 md:grid-cols-[208px_minmax(0,1fr)] md:gap-8">
-        <div className="flex items-center gap-4 rounded-[20px] bg-[#F7F7F8] p-3 md:block md:rounded-none md:bg-transparent md:p-0">
-          <ScanPhoto photo={photo} checks={checks} verdict={verdict} />
-          <CheckTicker states={states} verdict={verdict} />
-        </div>
+      <div className={cn('mt-7 md:mt-8', choosing ? 'grid items-start gap-5 md:grid-cols-[208px_minmax(0,1fr)] md:gap-8' : 'flex justify-center')}>
+        <motion.div
+          layout
+          transition={LAYOUT}
+          className={
+            choosing
+              ? 'flex items-center gap-4 rounded-[20px] bg-[#F7F7F8] p-3 md:block md:rounded-none md:bg-transparent md:p-0'
+              : 'flex w-[220px] flex-col md:w-[240px]'
+          }
+        >
+          <motion.div layout transition={LAYOUT}>
+            <ScanPhoto photo={photo} checks={checks} verdict={verdict} className={choosing ? 'w-[112px] md:w-full' : 'w-full'} />
+          </motion.div>
+          <motion.div layout="position" transition={LAYOUT} className={cn('min-w-0', choosing ? 'flex-1 md:mt-4' : 'mt-4')}>
+            <CheckTicker states={states} verdict={verdict} />
+          </motion.div>
+        </motion.div>
 
-        <div>
-          <div role="radiogroup" aria-label="Catalog" className="flex flex-col gap-2.5">
-            {CATALOG_OPTIONS.map((o, i) => (
-              <CatalogCard key={o.kind} {...o} i={i} />
-            ))}
-          </div>
-          <StatusLine catalogKind={catalogKind} verdict={verdict} />
-        </div>
+        <AnimatePresence>
+          {choosing && (
+            <motion.div key="options" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, delay: 0.12, ease: EASE }}>
+              <div role="radiogroup" aria-label="Catalog" className="flex flex-col gap-2.5">
+                {CATALOG_OPTIONS.map((o, i) => (
+                  <CatalogCard key={o.kind} {...o} i={i} />
+                ))}
+              </div>
+              <StatusLine catalogKind={catalogKind} verdict={verdict} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

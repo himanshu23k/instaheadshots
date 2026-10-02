@@ -14,12 +14,12 @@ import { DEMO_PHOTO, FAILURES, SAMPLE_MSGS, styleNames, type CatalogKind, type C
  *     default) fails the first upload on lighting and passes the next, so both
  *     states are seen; `auto` judges the real photo (under 500px fails).
  *   ?regens=N — free redos in the gallery (default 2).
- *   ?screen=check|check-fail|sampling|offer|pay|save|gallery — open a state
+ *   ?screen=check|check-choose|check-fail|sampling|offer|pay|save|gallery — open a state
  *     directly, using a demo photo.
  */
 
 export type Screen = 'landing' | 'check' | 'sampling' | 'offer' | 'pay' | 'save' | 'gallery'
-export type TileState = 'queued' | 'working' | 'done'
+export type TileState = 'queued' | 'done'
 type CheckMark = 0 | 1 | -1
 
 const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
@@ -35,6 +35,12 @@ type State = {
   checks: [CheckMark, CheckMark, CheckMark]
   verdict: 'pass' | 'fail' | null
   fail: CheckFailure | null
+  /**
+   * The photo check comes first, alone; the catalog choice only appears once
+   * the photo has cleared (after a short beat to show it cleared), so a failed
+   * photo never shows options that then disappear.
+   */
+  choosing: boolean
   catalogKind: CatalogKind | null
   attempt: number
   sampleStep: number
@@ -60,7 +66,6 @@ type Actions = {
   pay: () => void
   setEmail: (email: string) => void
   save: (as: 'account' | 'guest') => void
-  regenTile: (pos: number) => void
   redoSet: () => void
   markDownloadedAll: () => void
   /** Closes the flow and returns to the landing page. */
@@ -76,6 +81,7 @@ const INITIAL: State = {
   checks: [0, 0, 0],
   verdict: null,
   fail: null,
+  choosing: false,
   catalogKind: null,
   attempt: 0,
   sampleStep: 0,
@@ -126,7 +132,7 @@ export const useHairstyleLandingStore = create<State & Actions>((set, get) => {
     const wide = !forcePass && !forceFail && (w / h > 2.1 || h / w > 2.4)
     const fail = wide ? FAILURES.face : firstFails ? FAILURES.light : small ? FAILURES.small : null
 
-    set({ screen: 'check', photo: src, checks: [0, 0, 0], verdict: null, fail: null, attempt })
+    set({ screen: 'check', photo: src, checks: [0, 0, 0], verdict: null, fail: null, choosing: false, attempt })
     toTop()
 
     const mark = (i: number, ok: boolean) =>
@@ -146,11 +152,14 @@ export const useHairstyleLandingStore = create<State & Actions>((set, get) => {
         }
       })
     })
-    if (!fail)
+    if (!fail) {
       after(2000, () => {
         set({ verdict: 'pass' })
         maybeStartSample()
       })
+      // Let the "Photo cleared" moment land, then bring in the catalog choice.
+      after(2900, () => set({ choosing: true }))
+    }
   }
 
   /** Generation begins at payment and keeps running behind the save screen. The free style (index 0) is already done. */
@@ -219,24 +228,6 @@ export const useHairstyleLandingStore = create<State & Actions>((set, get) => {
       toTop()
     },
 
-    regenTile: (pos) => {
-      const { regenLeft, order } = get()
-      if (regenLeft <= 0) return
-      const idx = order[pos]
-      set((s) => {
-        const tileState = [...s.tileState]
-        tileState[pos] = 'working'
-        return { tileState, regenLeft: regenLeft - 1 }
-      })
-      after(1700, () =>
-        set((s) => {
-          const tileState = [...s.tileState]
-          tileState[pos] = 'done'
-          return { tileState, tileShift: { ...s.tileShift, [idx]: (s.tileShift[idx] ?? 0) + 5 } }
-        }),
-      )
-    },
-
     redoSet: () => {
       const { regenLeft, order } = get()
       if (regenLeft <= 0) return
@@ -260,6 +251,9 @@ export const useHairstyleLandingStore = create<State & Actions>((set, get) => {
         case 'check':
           set({ ...base, catalogKind: null, attempt: 0 })
           runCheck(DEMO_PHOTO, 1000, 1000)
+          return
+        case 'check-choose':
+          set({ ...base, screen: 'check', catalogKind: null, checks: [1, 1, 1], verdict: 'pass', choosing: true })
           return
         case 'check-fail':
           set({ ...base, screen: 'check', checks: [1, -1, 0], verdict: 'fail', fail: FAILURES.light })
