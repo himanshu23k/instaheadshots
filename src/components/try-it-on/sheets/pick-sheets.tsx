@@ -326,7 +326,8 @@ export function LinkSheet({ route }: { route: Route<'link'> }) {
       const verdict = classifyLink(value)
       if (verdict !== 'ok') return setState(verdict)
       const items = ZARA_TEDDY.items
-      if (route.slot) {
+      // From a builder slot, or Create Look's "Add Product": pick pieces into the builder.
+      if (route.slot || route.toBuilder) {
         replaceSheet({ name: 'found', slot: route.slot, image: ZARA_TEDDY.photos[0].image, items, title: 'Items found' })
       } else {
         replaceSheet({ name: 'try', garments: [items[0]], product: ZARA_TEDDY })
@@ -380,7 +381,7 @@ export function LinkSheet({ route }: { route: Route<'link'> }) {
         {state === 'blocked' && (
           <button
             type="button"
-            onClick={() => replaceSheet({ name: 'upload', slot: route.slot })}
+            onClick={() => replaceSheet({ name: 'upload', slot: route.slot, toBuilder: route.toBuilder })}
             className="h-[45px] w-full rounded-[8px] text-[16px] leading-[18px] transition-colors hover:bg-[#EEEEF0]"
             style={{ background: C.grey03, color: C.text, fontWeight: 450 }}
           >
@@ -480,6 +481,8 @@ export function UploadSheet({ route }: { route: Route<'upload'> }) {
           ? { name: 'found', slot: route.slot, image, items, title: 'Items found' }
           : { name: 'not-found', slot: route.slot, image },
       )
+    } else if (route.toBuilder) {
+      replaceSheet({ name: 'found', image, items, title: 'Items found' })
     } else if (items.length > 1) {
       replaceSheet({ name: 'upload-pieces', sample, image })
     } else {
@@ -608,7 +611,7 @@ export function UploadPiecesSheet({ route }: { route: Route<'upload-pieces'> }) 
 export function CollectionSheet({ route }: { route: Route<'collection'> }) {
   const pushSheet = useTryItOnStore((s) => s.pushSheet)
   const setDraftPiece = useTryItOnStore((s) => s.setDraftPiece)
-  const popTo = useTryItOnStore((s) => s.popTo)
+  const returnToBuilder = useTryItOnStore((s) => s.returnToBuilder)
   const setBuilderNotice = useTryItOnStore((s) => s.setBuilderNotice)
   const [filter, setFilter] = useState<(typeof COLLECTION_FILTERS)[number]['id']>('all')
   const [selected, setSelected] = useState<string | null>(null)
@@ -624,7 +627,7 @@ export function CollectionSheet({ route }: { route: Route<'collection'> }) {
     if (route.slot) {
       setDraftPiece(g)
       setBuilderNotice(`${g.name} added`)
-      popTo('builder')
+      returnToBuilder()
     } else {
       pushSheet({ name: 'try', garments: [g] })
     }

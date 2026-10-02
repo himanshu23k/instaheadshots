@@ -161,7 +161,16 @@ export function Spinner({ size = 14, className }: { size?: number; className?: s
  * found in a bigger photo are cropped to their detection box — the box spans
  * the tile's width and sits centred vertically.
  */
-export function GarmentImage({ garment, className }: { garment: Garment; className?: string }) {
+export function GarmentImage({
+  garment,
+  className,
+  background,
+}: {
+  garment: Garment
+  className?: string
+  /** Overrides the tile colour (Create Look sits everything on white). */
+  background?: string
+}) {
   const { crop } = garment
   const box = (garment as Partial<FoundItem>).found
   let style: React.CSSProperties | undefined
@@ -180,7 +189,7 @@ export function GarmentImage({ garment, className }: { garment: Garment; classNa
   return (
     <div
       className={cn('relative overflow-hidden', className)}
-      style={{ background: garment.look === 'mannequin' ? C.tile : '#FFFFFF' }}
+      style={{ background: background ?? (garment.look === 'mannequin' ? C.tile : '#FFFFFF') }}
     >
       <img
         src={garment.image}

@@ -86,7 +86,22 @@ function Hotspot({ slot, x, y, onClick }: { slot: Slot; x: number; y: number; on
 
 // ── Cards ────────────────────────────────────────────────────────────────────
 
-function LookCard({ look, isBase, active }: { look: Look; isBase: boolean; active: boolean }) {
+/** Shared-element id that ties a Past Trials tile to its opened card. */
+const trialLayoutId = (id: string) => `trial-${id}`
+const GROW = { type: 'spring', stiffness: 380, damping: 36, mass: 0.9 } as const
+
+function LookCard({
+  look,
+  isBase,
+  active,
+  layoutId,
+}: {
+  look: Look
+  isBase: boolean
+  active: boolean
+  /** Set when the card opened from a Past Trials tile — it grows out of it. */
+  layoutId?: string
+}) {
   const phase = useTryItOnStore((s) => s.phase)
   const openSheet = useTryItOnStore((s) => s.openSheet)
   const tryOn = useTryItOnStore((s) => s.tryOn)
@@ -113,9 +128,12 @@ function LookCard({ look, isBase, active }: { look: Look; isBase: boolean; activ
   }
 
   return (
-    <div
-      className="relative min-h-0 flex-1 overflow-hidden rounded-[12px] border border-white bg-[#E7E8EA]"
-      style={{ boxShadow: '0 2px 24px rgba(0,0,0,0.08)' }}
+    <motion.div
+      layoutId={layoutId}
+      transition={GROW}
+      className="relative min-h-0 flex-1 overflow-hidden border border-white bg-[#E7E8EA]"
+      // borderRadius as a style so the shared transition keeps the corners round while it scales.
+      style={{ borderRadius: 12, boxShadow: '0 2px 24px rgba(0,0,0,0.08)' }}
     >
       {refreshing ? (
         <>
@@ -141,15 +159,24 @@ function LookCard({ look, isBase, active }: { look: Look; isBase: boolean; activ
           src={look.render.image}
           alt={isBase ? 'Your base photo' : `You wearing ${look.pieces.map((p) => p.name).join(', ')}`}
           draggable={false}
-          initial={{ opacity: 0, filter: 'blur(12px)' }}
+          // Growing out of a tile, the photo is already there — only fresh renders blur in.
+          // `layout` keeps it from stretching while the card changes shape around it.
+          layout={layoutId ? true : undefined}
+          initial={layoutId ? false : { opacity: 0, filter: 'blur(12px)' }}
           animate={{ opacity: 1, filter: 'blur(0px)' }}
-          transition={{ duration: 0.6, ease: EASE }}
+          transition={layoutId ? GROW : { duration: 0.6, ease: EASE }}
           className={cn('absolute inset-0 size-full object-cover', full ? 'object-[50%_20%]' : 'object-top')}
         />
       )}
 
       {!refreshing && (
-        <>
+        <motion.div
+          className="absolute inset-0 [&>*]:pointer-events-auto"
+          style={{ pointerEvents: 'none' }}
+          initial={layoutId ? { opacity: 0 } : false}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, delay: layoutId ? 0.25 : 0 }}
+        >
           <GlassButton
             label="Fix your base photo"
             onClick={() => openSheet({ name: 'redo' })}
@@ -161,7 +188,7 @@ function LookCard({ look, isBase, active }: { look: Look; isBase: boolean; activ
           {!isBase && (
             <button
               type="button"
-              onClick={toggleFavorite}
+              onClick={() => toggleFavorite(look.id)}
               aria-label={look.favorite ? 'Remove from favorites' : 'Add to favorites'}
               aria-pressed={look.favorite}
               className="absolute right-2.5 top-2.5 p-1 transition-transform active:scale-90"
@@ -228,9 +255,9 @@ function LookCard({ look, isBase, active }: { look: Look; isBase: boolean; activ
               </button>
             </>
           )}
-        </>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -343,6 +370,65 @@ function Caption({ isBase }: { isBase: boolean }) {
 
 // ── Home: base | past trials — Claude Design 4b ─────────────────────────────
 
+/** One trial in the grid: tap to open it (it grows into the full card), heart to like it. */
+function TrialTile({ look, onOpen }: { look: Look; onOpen: () => void }) {
+  const toggleFavorite = useTryItOnStore((s) => s.toggleFavorite)
+  const names = look.pieces
+    .filter((p) => p.source !== 'base')
+    .map((p) => p.name)
+    .join(', ')
+  return (
+    <motion.div
+      layoutId={trialLayoutId(look.id)}
+      transition={GROW}
+      className="relative aspect-[3/4] overflow-hidden border border-white bg-[#E7E8EA]"
+      style={{ borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Open look: ${names}`}
+        className="absolute inset-0 transition-transform duration-150 active:scale-[0.97]"
+      >
+        <motion.img
+          layout
+          transition={GROW}
+          src={look.render.image}
+          alt=""
+          draggable={false}
+          className={cn(
+            'absolute inset-0 size-full object-cover',
+            look.render.framing === 'full' ? 'object-[50%_20%]' : 'object-top',
+          )}
+        />
+      </button>
+      <button
+        type="button"
+        onClick={() => toggleFavorite(look.id)}
+        aria-label={look.favorite ? `Unlike ${names}` : `Like ${names}`}
+        aria-pressed={look.favorite}
+        className="absolute right-1 top-1 p-1.5 transition-transform active:scale-90"
+      >
+        <motion.span
+          key={String(look.favorite)}
+          initial={{ scale: look.favorite ? 0.6 : 1 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+          className="block"
+        >
+          <Heart
+            size={18}
+            strokeWidth={1.6}
+            color={look.favorite ? '#FF356F' : '#FFFFFF'}
+            fill={look.favorite ? '#FF356F' : 'transparent'}
+            style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))' }}
+          />
+        </motion.span>
+      </button>
+    </motion.div>
+  )
+}
+
 /**
  * The grid of past generations; tapping one opens it on its own. The heading
  * sits above the grid and condenses once the grid scrolls: the title steps
@@ -415,36 +501,7 @@ function PastTrials({ active }: { active: boolean }) {
       >
         <div className="grid grid-cols-2 gap-2">
           {looks.map((look) => (
-            <button
-              key={look.id}
-              type="button"
-              onClick={() => setView({ name: 'look', id: look.id })}
-              aria-label={`Open look: ${look.pieces
-                .filter((p) => p.source !== 'base')
-                .map((p) => p.name)
-                .join(', ')}`}
-              className="relative aspect-[3/4] overflow-hidden rounded-[12px] border border-white bg-[#E7E8EA] transition-transform duration-150 active:scale-[0.97]"
-              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
-            >
-              <img
-                src={look.render.image}
-                alt=""
-                draggable={false}
-                className={cn(
-                  'absolute inset-0 size-full object-cover',
-                  look.render.framing === 'full' ? 'object-[50%_20%]' : 'object-top',
-                )}
-              />
-              {look.favorite && (
-                <Heart
-                  size={16}
-                  className="absolute right-2 top-2"
-                  color="#FF356F"
-                  fill="#FF356F"
-                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
-                />
-              )}
-            </button>
+            <TrialTile key={look.id} look={look} onOpen={() => setView({ name: 'look', id: look.id, fromGrid: true })} />
           ))}
         </div>
       </div>
@@ -612,9 +669,10 @@ export function Studio({ onBack }: { onBack: () => void }) {
     }
   }
 
-  // Swap screens with a short slide: deeper (a look) comes in from the right.
+  // A trial opening (or closing) grows out of its tile, so those screens only cross-fade
+  // around it; the pending render slides in like a deeper step.
   const screenKey = view.name === 'look' ? `look-${view.id}` : view.name
-  const deeper = view.name !== 'home'
+  const kind: 'grow' | 'deeper' = view.name === 'pending' ? 'deeper' : 'grow'
 
   return (
     <motion.div
@@ -645,13 +703,19 @@ export function Studio({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="relative min-h-0 flex-1 pt-4">
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false} custom={kind}>
           <motion.div
             key={screenKey}
             className="h-full"
-            initial={{ opacity: 0, x: deeper ? 28 : -28 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: deeper ? -28 : 28 }}
+            custom={kind}
+            variants={{
+              enter: (k: typeof kind) => (k === 'grow' ? { opacity: 1 } : { opacity: 0, x: 28 }),
+              center: { opacity: 1, x: 0 },
+              exit: (k: typeof kind) => (k === 'grow' ? { opacity: 0 } : { opacity: 0, x: -28 }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
             transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
           >
             {view.name === 'home' && <HomePanels />}
@@ -663,7 +727,12 @@ export function Studio({ onBack }: { onBack: () => void }) {
             )}
             {view.name === 'look' && look && (
               <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
-                <LookCard look={look} isBase={false} active />
+                <LookCard
+                  look={look}
+                  isBase={false}
+                  active
+                  layoutId={view.fromGrid ? trialLayoutId(look.id) : undefined}
+                />
                 <Caption isBase={false} />
               </div>
             )}

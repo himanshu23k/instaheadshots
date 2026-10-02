@@ -4,6 +4,7 @@ import {
   BASE_RENDER,
   GENERATING_STEPS,
   RENDERS,
+  SLOT_SUGGESTIONS,
   ZARA_TEDDY,
   garmentById,
   resolveRender,
@@ -26,8 +27,8 @@ export type Look = { id: string; render: Render; pieces: Garment[]; favorite: bo
 export type SheetRoute =
   | { name: 'pick' }
   | { name: 'try'; garments: Garment[]; product?: LinkProduct; fromUpload?: boolean }
-  | { name: 'link'; slot?: Slot; url?: string }
-  | { name: 'upload'; slot?: Slot }
+  | { name: 'link'; slot?: Slot; url?: string; toBuilder?: boolean }
+  | { name: 'upload'; slot?: Slot; toBuilder?: boolean }
   | { name: 'upload-pieces'; sample: UploadSample; image: string }
   | { name: 'collection'; slot?: Slot }
   | { name: 'builder' }
@@ -50,6 +51,8 @@ type Draft = {
   pieces: Partial<Record<Slot, Garment>>
   /** Pieces a new pick pushed out, so the builder can offer "undo". */
   replaced: Partial<Record<Slot, Garment[]>>
+  /** v2: slots "Style Me" must leave alone. */
+  locked: Partial<Record<Slot, boolean>>
 }
 
 type Phase = 'idle' | 'generating' | 'failed' | 'refreshing-base'
@@ -60,7 +63,11 @@ type Phase = 'idle' | 'generating' | 'failed' | 'refreshing-base'
  * `look` is one past generation on its own, with no side peek. `pending` is the
  * render in progress (or the one that just failed).
  */
-export type View = { name: 'home'; panel: 0 | 1 } | { name: 'look'; id: string } | { name: 'pending' }
+export type View =
+  | { name: 'home'; panel: 0 | 1 }
+  /** `fromGrid`: opened by tapping a Past Trials tile, so it grows out of that tile. */
+  | { name: 'look'; id: string; fromGrid?: boolean }
+  | { name: 'pending' }
 
 /** Which slots a piece takes over — a dress fills both top and bottom. */
 function conflictsOf(slot: Slot): Slot[] {
@@ -99,6 +106,7 @@ const notBase = (p: Garment) => p.source !== 'base'
 const toDraft = (pieces: Garment[]): Draft => ({
   pieces: Object.fromEntries(pieces.filter(notBase).map((p) => [p.slot, p])),
   replaced: {},
+  locked: {},
 })
 
 const idsOf = (pieces: Garment[]) =>
@@ -117,6 +125,16 @@ const START_CREDITS = Number(params.get('credits') ?? 50)
  * side peek. `?user_type=repeat` starts with 16 past trials already in the grid.
  */
 export const USER_TYPE: 'new' | 'repeat' = params.get('user_type') === 'repeat' ? 'repeat' : 'new'
+
+/**
+ * `?version=1` (the default) completes the look in the slot-list sheet.
+ * `?version=2` opens the full-screen "Create Look" grid, after Doji. Other
+ * versions aren't designed yet and fall back to 1.
+ */
+export const VERSION: 1 | 2 = params.get('version') === '2' ? 2 : 1
+
+/** Slots "Style Me" fills — the ones we have catalog pieces for. */
+const STYLE_ME_SLOTS: Slot[] = ['top', 'bottom', 'outerwear']
 
 /** A returning user's history: the pre-rendered looks, cycled to 16 trials, newest first. */
 function seedLooks(): Look[] {
@@ -162,6 +180,8 @@ export type TryItOnState = {
   /** One-line confirmation shown at the top of the builder ("2 items added"). */
   builderNotice: string | null
   draft: Draft | null
+  /** v2: the full-screen Create Look page is up. */
+  builderOpen: boolean
   banner: Banner | null
   bannerKey: number
 
@@ -172,6 +192,8 @@ export type TryItOnState = {
   /** Pop back to the nearest sheet called `name` (e.g. return to the builder). */
   popTo: (name: SheetRoute['name']) => void
   closeSheets: () => void
+  /** Back to the builder after adding a piece — a sheet in v1, the page underneath in v2. */
+  returnToBuilder: () => void
   setBuilderNotice: (text: string | null) => void
 
   setView: (view: View) => void
@@ -180,12 +202,16 @@ export type TryItOnState = {
 
   tryOn: (pieces: Garment[]) => void
   retry: () => void
-  toggleFavorite: () => void
+  /** Like or unlike a look — the one on screen, or any trial in the grid by id. */
+  toggleFavorite: (id?: string) => void
   createNewLook: () => void
   refreshBase: () => void
   buyCredits: (credits: number) => void
 
   openBuilder: () => void
+  closeBuilder: () => void
+  toggleLock: (slot: Slot) => void
+  styleMe: () => void
   setDraftPiece: (piece: Garment) => void
   undoReplace: (slot: Slot) => void
   /** Take a piece out of the draft — that slot falls back to the base. */
@@ -209,6 +235,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
   sheets: [],
   builderNotice: null,
   draft: null,
+  builderOpen: false,
   banner: null,
   bannerKey: 0,
 
@@ -222,6 +249,11 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       return { sheets: i === -1 ? s.sheets : s.sheets.slice(0, i + 1) }
     }),
   closeSheets: () => set({ sheets: [], builderNotice: null }),
+  returnToBuilder: () =>
+    set((s) => {
+      const i = s.sheets.map((r) => r.name).lastIndexOf('builder')
+      return { sheets: i === -1 ? [] : s.sheets.slice(0, i + 1) }
+    }),
   setBuilderNotice: (builderNotice) => set({ builderNotice }),
 
   setView: (view) => set({ view }),
@@ -244,7 +276,8 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       genFrom: currentLook(st).id,
       sheets: [],
       builderNotice: null,
-      draft: null,
+      // The draft stays so Create Look can slide away intact; opening the builder rebuilds it.
+      builderOpen: false,
       view: { name: 'pending' },
       banner: { kind: 'info', text: 'Image is creating. 1 credit got used' },
       bannerKey: st.bannerKey + 1,
@@ -281,10 +314,10 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
 
   retry: () => get().tryOn(get().genPieces),
 
-  toggleFavorite: () => {
+  toggleFavorite: (id) => {
     const { looks, view } = get()
-    if (view.name !== 'look') return
-    const look = looks.find((l) => l.id === view.id)
+    const target = id ?? (view.name === 'look' ? view.id : undefined)
+    const look = looks.find((l) => l.id === target)
     if (!look) return
     const favorite = !look.favorite
     set((st) => ({
@@ -317,7 +350,37 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
     })),
 
   openBuilder: () =>
-    set((st) => ({ draft: toDraft(currentLook(st).pieces), builderNotice: null, sheets: [{ name: 'builder' }] })),
+    set((st) =>
+      VERSION === 2
+        ? { draft: toDraft(currentLook(st).pieces), builderNotice: null, builderOpen: true, sheets: [] }
+        : { draft: toDraft(currentLook(st).pieces), builderNotice: null, sheets: [{ name: 'builder' }] },
+    ),
+
+  closeBuilder: () => set({ builderOpen: false, sheets: [], builderNotice: null }),
+
+  toggleLock: (slot) =>
+    set((st) =>
+      st.draft ? { draft: { ...st.draft, locked: { ...st.draft.locked, [slot]: !st.draft.locked[slot] } } } : st,
+    ),
+
+  // Fill every unlocked slot we have pieces for with a different suggestion.
+  styleMe: () => {
+    const { draft } = get()
+    if (!draft) return
+    const dressLocked = !!(draft.pieces.dress && draft.locked.dress)
+    let styled = 0
+    for (const slot of STYLE_ME_SLOTS) {
+      if (draft.locked[slot] || (dressLocked && slot !== 'outerwear')) continue
+      const current = get().draft?.pieces[slot]?.id
+      const options = SLOT_SUGGESTIONS[slot].filter((id) => id !== current)
+      const pick = garmentById(options[Math.floor(Math.random() * options.length)])
+      if (pick) {
+        get().setDraftPiece(pick)
+        styled++
+      }
+    }
+    set({ builderNotice: styled ? `Styled ${styled} pieces for you` : 'Everything is locked' })
+  },
 
   setDraftPiece: (piece) =>
     set((st) => {
@@ -333,7 +396,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       // Keep the first thing a slot replaced, so undo goes back to the look itself.
       const replaced = { ...st.draft.replaced }
       if (pushedOut.length && !replaced[piece.slot]) replaced[piece.slot] = pushedOut
-      return { draft: { pieces, replaced } }
+      return { draft: { ...st.draft, pieces, replaced } }
     }),
 
   undoReplace: (slot) =>
@@ -344,7 +407,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       for (const p of st.draft.replaced[slot] ?? []) pieces[p.slot] = p
       const replaced = { ...st.draft.replaced }
       delete replaced[slot]
-      return { draft: { pieces, replaced } }
+      return { draft: { ...st.draft, pieces, replaced } }
     }),
 
   removeDraftSlot: (slot) =>
@@ -352,9 +415,11 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       if (!st.draft) return st
       const pieces = { ...st.draft.pieces }
       const replaced = { ...st.draft.replaced }
+      const locked = { ...st.draft.locked }
       delete pieces[slot]
       delete replaced[slot]
-      return { draft: { pieces, replaced } }
+      delete locked[slot]
+      return { draft: { pieces, replaced, locked } }
     }),
 
   draftChanged: () => {
@@ -378,6 +443,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       sheets: [],
       builderNotice: null,
       draft: null,
+      builderOpen: false,
       banner: null,
     })
   },

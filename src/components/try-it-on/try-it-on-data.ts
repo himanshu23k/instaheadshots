@@ -9,7 +9,7 @@
 const A = '/try-it-on'
 
 /** Builder slots, in the order the Complete the Look sheet lists them. */
-export type Slot = 'top' | 'bottom' | 'dress' | 'outerwear' | 'shoes' | 'bag'
+export type Slot = 'top' | 'bottom' | 'dress' | 'outerwear' | 'shoes' | 'bag' | 'glasses' | 'hat'
 
 export const SLOT_ORDER: Slot[] = ['top', 'bottom', 'dress', 'outerwear', 'shoes', 'bag']
 
@@ -20,6 +20,8 @@ export const SLOT_LABEL: Record<Slot, string> = {
   outerwear: 'Outerwear',
   shoes: 'Shoes',
   bag: 'Bag',
+  glasses: 'Glasses',
+  hat: 'Hat',
 }
 
 export type PieceSource = 'base' | 'catalog' | 'link' | 'upload'
@@ -123,6 +125,8 @@ export const SLOT_SUGGESTIONS: Record<Slot, string[]> = {
   outerwear: ['leather-jacket', 'denim-jacket', 'brown-jacket', 'brown-blazer'],
   shoes: [],
   bag: [],
+  glasses: [],
+  hat: [],
 }
 
 // ── Paste a product link ─────────────────────────────────────────────────────

@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Check, Plus, Upload, X } from 'lucide-react'
-import { currentLook, useTryItOnStore, withBase, withPiece, withoutSlot, type SheetRoute } from '@/store/try-it-on-store'
+import {
+  VERSION,
+  currentLook,
+  useTryItOnStore,
+  withBase,
+  withPiece,
+  withoutSlot,
+  type SheetRoute,
+} from '@/store/try-it-on-store'
 import {
   COLLECTION,
   SLOT_LABEL,
@@ -194,7 +202,7 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
   const draft = useTryItOnStore((s) => s.draft)
   const pushSheet = useTryItOnStore((s) => s.pushSheet)
   const setDraftPiece = useTryItOnStore((s) => s.setDraftPiece)
-  const popTo = useTryItOnStore((s) => s.popTo)
+  const returnToBuilder = useTryItOnStore((s) => s.returnToBuilder)
   const setBuilderNotice = useTryItOnStore((s) => s.setBuilderNotice)
   const current = draft?.pieces[slot]
   const [selected, setSelected] = useState<string | null>(current?.source === 'catalog' ? current.id : null)
@@ -209,14 +217,17 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
     const g = byId(selected)
     setDraftPiece(g)
     setBuilderNotice(`${g.name} added`)
-    popTo('builder')
+    returnToBuilder()
   }
 
   return (
     <>
       <SheetHeader title={SLOT_LABEL[slot]} />
       <SheetScroll className="pt-5">
-        <LinkField compact value={url} onChange={setUrl} onSubmit={(v) => pushSheet({ name: 'link', slot, url: v })} />
+        {/* v2 has its link field above the Create Look grid, so a slot only offers upload and suggestions. */}
+        {VERSION === 1 && (
+          <LinkField compact value={url} onChange={setUrl} onSubmit={(v) => pushSheet({ name: 'link', slot, url: v })} />
+        )}
         <div className="flex flex-col gap-4">
           <SectionLabel>Suggested for this look</SectionLabel>
           <div className="grid grid-cols-2 gap-4">
@@ -248,7 +259,8 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
           </div>
           {suggestions.length === 0 && (
             <p className="text-[14px] leading-[18px]" style={{ color: C.secondary }}>
-              We don't have {lower(slot)} to suggest yet. Paste a link or upload a photo of one you have in mind.
+              We don't have {lower(slot)} to suggest yet.{' '}
+              {VERSION === 1 ? 'Paste a link or upload a photo of one you have in mind.' : 'Upload a photo of one you have in mind.'}
             </p>
           )}
           {hasMore && (
@@ -281,7 +293,7 @@ export function SlotSheet({ route }: { route: Route<'slot'> }) {
 export function FoundSheet({ route }: { route: Route<'found'> }) {
   const draft = useTryItOnStore((s) => s.draft)
   const setDraftPiece = useTryItOnStore((s) => s.setDraftPiece)
-  const popTo = useTryItOnStore((s) => s.popTo)
+  const returnToBuilder = useTryItOnStore((s) => s.returnToBuilder)
   const setBuilderNotice = useTryItOnStore((s) => s.setBuilderNotice)
   const { items, slot } = route
   const [picked, setPicked] = useState<string[]>(() => {
@@ -300,7 +312,7 @@ export function FoundSheet({ route }: { route: Route<'found'> }) {
     const chosen = items.filter((it) => picked.includes(it.id))
     chosen.forEach((it) => setDraftPiece(it))
     setBuilderNotice(chosen.length === 1 ? `${chosen[0].name} added` : `${chosen.length} items added`)
-    popTo('builder')
+    returnToBuilder()
   }
 
   return (
@@ -440,4 +452,5 @@ export function SwapSheet({ route }: { route: Route<'swap'> }) {
     </>
   )
 }
+
 
