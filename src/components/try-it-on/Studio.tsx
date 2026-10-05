@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, animate, motion, useMotionValue } from 'motion/react'
 import { ArrowLeft, Heart, RotateCcw, Share } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { VERSION, currentLook, useTryItOnStore, type Look } from '@/store/try-it-on-store'
@@ -88,6 +88,31 @@ function Hotspot({ slot, x, y, onClick }: { slot: Slot; x: number; y: number; on
 
 /** Shared-element id that ties a Past Trials tile to its opened card. */
 const trialLayoutId = (id: string) => `trial-${id}`
+
+/** How far the caption reaches below its card (it tucks 20px under it). */
+const CAPTION_H = 40
+
+/**
+ * Width of a 3:4 portrait card that fits its size container (`containerType:
+ * size`), leaving room for a caption under it and `gutter` px beside it. Narrow
+ * screens are limited by width, short ones by height.
+ */
+const portraitWidth = (caption: boolean, gutter = 0) =>
+  `min(calc(100cqw - ${gutter}px), calc((100cqh - ${caption ? CAPTION_H : 0}px) * 3 / 4))`
+
+/** Every generated image — base, render in progress, finished look — is a 3:4 portrait. */
+function Portrait({ width, children }: { width: string; children: React.ReactNode }) {
+  return (
+    <div className="flex shrink-0 flex-col" style={{ width, aspectRatio: '3 / 4' }}>
+      {children}
+    </div>
+  )
+}
+
+/** How much of the previous and next look shows at each edge while browsing trials. */
+const PEEK = 20
+/** Space between neighbouring looks in that row. */
+const GAP = 16
 const GROW = { type: 'spring', stiffness: 380, damping: 36, mass: 0.9 } as const
 
 export function LookCard({
@@ -590,6 +615,7 @@ function HomePanels() {
           CTA_SPACE,
           hasTrials ? 'w-[calc(100%-32px)]' : 'w-full',
         )}
+        style={{ containerType: 'size' }}
         onClickCapture={(e) => {
           // Tapping the base's peeking edge swipes back to it.
           if (panel === 1) {
@@ -599,8 +625,12 @@ function HomePanels() {
           }
         }}
       >
-        <LookCard look={base} isBase active={panel === 0} />
-        <Caption isBase />
+        <div className="mx-auto flex flex-col">
+          <Portrait width={portraitWidth(true)}>
+            <LookCard look={base} isBase active={panel === 0} />
+          </Portrait>
+          <Caption isBase />
+        </div>
       </div>
       {hasTrials && (
         <div
@@ -648,6 +678,123 @@ export function BannerSlot() {
   )
 }
 
+/** A neighbouring look in the browsing carousel: just its photo; tapping it moves there. */
+function NeighborCard({ image, label, onClick }: { image: string; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="relative min-h-0 flex-1 overflow-hidden border border-white bg-[#E7E8EA]"
+      style={{ borderRadius: 12, boxShadow: '0 2px 24px rgba(0,0,0,0.08)' }}
+    >
+      <img src={image} alt="" draggable={false} className="absolute inset-0 size-full object-cover object-top" />
+    </button>
+  )
+}
+
+/**
+ * A trial opened from the Past Trials grid, between its neighbours: the trial
+ * before (the base, before the first) and the one after sit right beside it,
+ * their edges peeking in at the screen sides. The whole row follows the finger,
+ * so the next image slides in as you swipe; past a third of a card (or a flick)
+ * it settles there. Left for the next trial, right for the one before.
+ */
+function BrowseCarousel({ look, startFresh }: { look: Look; startFresh: boolean }) {
+  const looks = useTryItOnStore((s) => s.looks)
+  const base = useTryItOnStore((s) => s.base)
+  const setView = useTryItOnStore((s) => s.setView)
+  const createNewLook = useTryItOnStore((s) => s.createNewLook)
+  const x = useMotionValue(0)
+  const slot = useRef<HTMLDivElement>(null)
+  const dragged = useRef(false)
+  const busy = useRef(false)
+
+  const index = looks.findIndex((l) => l.id === look.id)
+  const prev = looks[index - 1]
+  const next = looks[index + 1]
+  const caption = !startFresh
+  // Each side keeps PEEK px of the neighbour plus the GAP before it.
+  const cardWidth = portraitWidth(caption, (PEEK + GAP) * 2)
+
+  // The row has moved one card over; once the new look is the current one, re-centre before paint.
+  useLayoutEffect(() => {
+    x.set(0)
+    busy.current = false
+  }, [look.id, x])
+
+  const commit = (dir: 1 | -1) => {
+    if (dir === 1 && next) return setView({ name: 'look', id: next.id, fromGrid: true })
+    if (dir === -1 && prev) return setView({ name: 'look', id: prev.id, fromGrid: true })
+    // Before the first trial is the base. v4's base is a fresh outfit; elsewhere it sits
+    // under whatever the builder holds.
+    if (VERSION === 4) createNewLook()
+    else setView({ name: 'home', panel: 0 })
+  }
+
+  const settle = (dir: 0 | 1 | -1) => {
+    if (busy.current) return
+    if (dir === 0 || (dir === 1 && !next)) {
+      animate(x, 0, { type: 'spring', stiffness: 420, damping: 40 })
+      return
+    }
+    busy.current = true
+    const w = (slot.current?.offsetWidth ?? 0) + GAP
+    animate(x, -dir * w, { duration: 0.3, ease: [0.23, 1, 0.32, 1] }).then(() => commit(dir))
+  }
+
+  const neighbour = (image: string | undefined, dir: 1 | -1, label: string) => (
+    <div className="flex shrink-0 flex-col" style={{ width: cardWidth }}>
+      {image && (
+        <Portrait width={cardWidth}>
+          <NeighborCard image={image} label={label} onClick={() => settle(dir)} />
+        </Portrait>
+      )}
+    </div>
+  )
+
+  return (
+    <div className={cn('relative h-full overflow-hidden', CTA_SPACE)} style={{ containerType: 'size' }}>
+      <motion.div
+        className="flex items-start"
+        // The first slot is the previous look; start the row so only PEEK px of it shows.
+        style={{ x, gap: GAP, marginLeft: `calc(${PEEK}px - ${cardWidth})`, touchAction: 'pan-y' }}
+        drag="x"
+        dragDirectionLock
+        dragMomentum={false}
+        // Nothing after the last trial: that side only gives a little.
+        dragConstraints={next ? undefined : { left: 0 }}
+        dragElastic={next ? undefined : 0.15}
+        onDragStart={() => (dragged.current = true)}
+        onDragEnd={(_, info) => {
+          const w = slot.current?.offsetWidth ?? 1
+          const dx = info.offset.x
+          const vx = info.velocity.x
+          settle(dx < -w / 3 || vx < -500 ? 1 : dx > w / 3 || vx > 500 ? -1 : 0)
+          // Let the click that ends a drag land first, then accept taps again.
+          window.setTimeout(() => (dragged.current = false), 0)
+        }}
+        // A drag that ends over a button (heart, hotspot, share) mustn't also press it.
+        onClickCapture={(e) => {
+          if (dragged.current) {
+            e.stopPropagation()
+            e.preventDefault()
+          }
+        }}
+      >
+        {neighbour(prev ? prev.render.image : base.render.image, -1, prev ? 'Previous look' : 'Your base photo')}
+        <div ref={slot} className="flex shrink-0 flex-col" style={{ width: cardWidth }}>
+          <Portrait width={cardWidth}>
+            <LookCard key={look.id} look={look} isBase={false} active layoutId={trialLayoutId(look.id)} startFresh={startFresh} />
+          </Portrait>
+          {caption && <Caption isBase={false} />}
+        </div>
+        {neighbour(next?.render.image, 1, 'Next look')}
+      </motion.div>
+    </div>
+  )
+}
+
 /**
  * What the studio shows for the current view: home (base | past trials),
  * the render in progress, or one look. Shared with v4 on the phone, which
@@ -657,9 +804,12 @@ export function StudioScreens({ startFresh = false }: { startFresh?: boolean }) 
   const view = useTryItOnStore((s) => s.view)
   const genSource = useTryItOnStore((s) => s.genSource)
   const look = useTryItOnStore((s) => (s.view.name === 'look' ? currentLook(s) : null))
+  // Trials opened from the grid share one screen, so moving between them is the carousel's
+  // own slide rather than a screen change.
+  const browsing = view.name === 'look' && !!view.fromGrid
+  const screenKey = view.name === 'look' ? (browsing ? 'browse' : `look-${view.id}`) : view.name
   // A trial opening (or closing) grows out of its tile, so those screens only cross-fade
   // around it; the pending render slides in like a deeper step.
-  const screenKey = view.name === 'look' ? `look-${view.id}` : view.name
   const kind: 'grow' | 'deeper' = view.name === 'pending' ? 'deeper' : 'grow'
 
   return (
@@ -680,21 +830,24 @@ export function StudioScreens({ startFresh = false }: { startFresh?: boolean }) 
       >
         {view.name === 'home' && <HomePanels />}
         {view.name === 'pending' && (
-          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
-            <PendingCard source={genSource} />
-            <Caption isBase />
+          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)} style={{ containerType: 'size' }}>
+            <div className="mx-auto flex flex-col">
+              <Portrait width={portraitWidth(true)}>
+                <PendingCard source={genSource} />
+              </Portrait>
+              <Caption isBase />
+            </div>
           </div>
         )}
-        {view.name === 'look' && look && (
-          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
-            <LookCard
-              look={look}
-              isBase={false}
-              active
-              layoutId={view.fromGrid ? trialLayoutId(look.id) : undefined}
-              startFresh={startFresh}
-            />
-            {!startFresh && <Caption isBase={false} />}
+        {view.name === 'look' && look && browsing && <BrowseCarousel look={look} startFresh={startFresh} />}
+        {view.name === 'look' && look && !browsing && (
+          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)} style={{ containerType: 'size' }}>
+            <div className="mx-auto flex flex-col">
+              <Portrait width={portraitWidth(!startFresh)}>
+                <LookCard look={look} isBase={false} active startFresh={startFresh} />
+              </Portrait>
+              {!startFresh && <Caption isBase={false} />}
+            </div>
           </div>
         )}
       </motion.div>

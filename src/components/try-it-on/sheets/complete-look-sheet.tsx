@@ -80,7 +80,7 @@ function SavedLookTile({ look, selected, onClick }: { look: Look; selected: bool
   return (
     <button type="button" onClick={onClick} aria-pressed={selected} aria-label={names.join(', ')} className="flex min-w-0 flex-col gap-2">
       <span
-        className="relative block aspect-square w-full overflow-hidden rounded-[8px]"
+        className="relative block aspect-[3/4] w-full overflow-hidden rounded-[8px]"
         style={{ border: selected ? `1.5px solid ${C.text}` : `1px solid ${C.grey12}` }}
       >
         <img src={look.render.image} alt="" className="absolute inset-0 size-full object-cover object-top" />

@@ -52,7 +52,8 @@ function LookRail() {
             aria-label={look.id === 'base' ? 'Your base photo' : `Look: ${look.pieces.filter((p) => p.source !== 'base').map((p) => p.name).join(', ')}`}
             className="shrink-0 overflow-hidden transition-[width,height] duration-200 disabled:opacity-60"
             style={{
-              width: on ? 60 : 52,
+              // 3:4 like every generated image.
+              width: on ? 45 : 39,
               height: on ? 60 : 52,
               borderRadius: on ? 8 : 6,
               border: on ? `1.5px solid ${C.text}` : `1px solid ${C.grey12}`,
