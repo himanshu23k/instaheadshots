@@ -90,17 +90,20 @@ function Hotspot({ slot, x, y, onClick }: { slot: Slot; x: number; y: number; on
 const trialLayoutId = (id: string) => `trial-${id}`
 const GROW = { type: 'spring', stiffness: 380, damping: 36, mass: 0.9 } as const
 
-function LookCard({
+export function LookCard({
   look,
   isBase,
   active,
   layoutId,
+  startFresh = false,
 }: {
   look: Look
   isBase: boolean
   active: boolean
   /** Set when the card opened from a Past Trials tile — it grows out of it. */
   layoutId?: string
+  /** v4 (Figma 3391:14790): the pill under a look starts afresh on the base instead of re-wearing it. */
+  startFresh?: boolean
 }) {
   const phase = useTryItOnStore((s) => s.phase)
   const openSheet = useTryItOnStore((s) => s.openSheet)
@@ -108,6 +111,7 @@ function LookCard({
   const toggleFavorite = useTryItOnStore((s) => s.toggleFavorite)
   const showBanner = useTryItOnStore((s) => s.showBanner)
   const openBuilder = useTryItOnStore((s) => s.openBuilder)
+  const createNewLook = useTryItOnStore((s) => s.createNewLook)
   const refreshing = isBase && phase === 'refreshing-base'
   const full = look.render.framing === 'full'
   const hotspots = Object.entries(look.render.hotspots ?? {}).filter(([slot]) =>
@@ -226,32 +230,45 @@ function LookCard({
                   slot={slot}
                   x={p.x}
                   y={p.y}
-                  // v3 swaps in the same outfit sheet, opened on that slot.
-                  onClick={() => (VERSION === 3 ? openBuilder(slot) : openSheet({ name: 'swap', slot }))}
+                  // v3/v4 swap in the same outfit sheet, opened on that slot.
+                  onClick={() => (VERSION >= 3 ? openBuilder(slot) : openSheet({ name: 'swap', slot }))}
                 />
               ))}
             </>
           )}
 
+          {!isBase && startFresh && (
+            <button
+              type="button"
+              onClick={createNewLook}
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white px-4 py-2 text-[12px] leading-[14px] backdrop-blur-[6px] transition-transform active:scale-95"
+              style={{ background: 'rgba(255,255,255,0.8)', color: C.text, fontWeight: 450, boxShadow: 'inset 0 2px 12px rgba(255,255,255,0.3)' }}
+            >
+              Start A Fresh
+            </button>
+          )}
+
           {!isBase && (
             <>
-              <button
-                type="button"
-                onClick={() => tryOn(look.pieces)}
-                className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-white/70 px-3 py-1.5 text-[12px] leading-[14px] backdrop-blur-[6px] transition-transform active:scale-95"
-                style={{
-                  background: 'rgba(255,255,255,0.85)',
-                  color: C.text,
-                  fontWeight: 450,
-                }}
-              >
-                {full && <RotateCcw size={13} strokeWidth={1.8} />}
-                {full ? 'Wear the same outfit' : 'Try the same outfit'}
-                <span className="h-3 w-px bg-black/20" aria-hidden />
-                <span className="flex items-center gap-1">
-                  <CreditsIcon size={13} />1
-                </span>
-              </button>
+              {!startFresh && (
+                <button
+                  type="button"
+                  onClick={() => tryOn(look.pieces)}
+                  className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-white/70 px-3 py-1.5 text-[12px] leading-[14px] backdrop-blur-[6px] transition-transform active:scale-95"
+                  style={{
+                    background: 'rgba(255,255,255,0.85)',
+                    color: C.text,
+                    fontWeight: 450,
+                  }}
+                >
+                  {full && <RotateCcw size={13} strokeWidth={1.8} />}
+                  {full ? 'Wear the same outfit' : 'Try the same outfit'}
+                  <span className="h-3 w-px bg-black/20" aria-hidden />
+                  <span className="flex items-center gap-1">
+                    <CreditsIcon size={13} />1
+                  </span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={share}
@@ -270,7 +287,7 @@ function LookCard({
 }
 
 /** A render in progress or one that failed — Figma 370:45210 → 370:47723, 370:51592. */
-function PendingCard({ source }: { source: string }) {
+export function PendingCard({ source }: { source: string }) {
   const phase = useTryItOnStore((s) => s.phase)
   const step = useTryItOnStore((s) => s.genStep)
   const pieces = useTryItOnStore((s) => s.genPieces)
@@ -347,7 +364,7 @@ function PendingCard({ source }: { source: string }) {
 }
 
 /** Figma "Base Look Container": grey strip tucked under the card. */
-function Caption({ isBase }: { isBase: boolean }) {
+export function Caption({ isBase }: { isBase: boolean }) {
   const createNewLook = useTryItOnStore((s) => s.createNewLook)
   return (
     <div
@@ -599,7 +616,7 @@ function HomePanels() {
 
 // ── Banner above the CTA ─────────────────────────────────────────────────────
 
-function BannerSlot() {
+export function BannerSlot() {
   const banner = useTryItOnStore((s) => s.banner)
   const key = useTryItOnStore((s) => s.bannerKey)
   const dismiss = useTryItOnStore((s) => s.dismissBanner)
@@ -631,6 +648,60 @@ function BannerSlot() {
   )
 }
 
+/**
+ * What the studio shows for the current view: home (base | past trials),
+ * the render in progress, or one look. Shared with v4 on the phone, which
+ * puts "Start A Fresh" on a look in place of its caption.
+ */
+export function StudioScreens({ startFresh = false }: { startFresh?: boolean }) {
+  const view = useTryItOnStore((s) => s.view)
+  const genSource = useTryItOnStore((s) => s.genSource)
+  const look = useTryItOnStore((s) => (s.view.name === 'look' ? currentLook(s) : null))
+  // A trial opening (or closing) grows out of its tile, so those screens only cross-fade
+  // around it; the pending render slides in like a deeper step.
+  const screenKey = view.name === 'look' ? `look-${view.id}` : view.name
+  const kind: 'grow' | 'deeper' = view.name === 'pending' ? 'deeper' : 'grow'
+
+  return (
+    <AnimatePresence mode="popLayout" initial={false} custom={kind}>
+      <motion.div
+        key={screenKey}
+        className="h-full"
+        custom={kind}
+        variants={{
+          enter: (k: typeof kind) => (k === 'grow' ? { opacity: 1 } : { opacity: 0, x: 28 }),
+          center: { opacity: 1, x: 0 },
+          exit: (k: typeof kind) => (k === 'grow' ? { opacity: 0 } : { opacity: 0, x: -28 }),
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+      >
+        {view.name === 'home' && <HomePanels />}
+        {view.name === 'pending' && (
+          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
+            <PendingCard source={genSource} />
+            <Caption isBase />
+          </div>
+        )}
+        {view.name === 'look' && look && (
+          <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
+            <LookCard
+              look={look}
+              isBase={false}
+              active
+              layoutId={view.fromGrid ? trialLayoutId(look.id) : undefined}
+              startFresh={startFresh}
+            />
+            {!startFresh && <Caption isBase={false} />}
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 /**
@@ -644,9 +715,7 @@ export function Studio({ onBack }: { onBack: () => void }) {
   const view = useTryItOnStore((s) => s.view)
   const phase = useTryItOnStore((s) => s.phase)
   const genFrom = useTryItOnStore((s) => s.genFrom)
-  const genSource = useTryItOnStore((s) => s.genSource)
   const hasTrials = useTryItOnStore((s) => s.looks.length > 0)
-  const look = useTryItOnStore((s) => (s.view.name === 'look' ? currentLook(s) : null))
   const sheetOpen = useTryItOnStore((s) => s.sheets.length > 0)
   const setView = useTryItOnStore((s) => s.setView)
   const openSheet = useTryItOnStore((s) => s.openSheet)
@@ -678,11 +747,6 @@ export function Studio({ onBack }: { onBack: () => void }) {
     }
   }
 
-  // A trial opening (or closing) grows out of its tile, so those screens only cross-fade
-  // around it; the pending render slides in like a deeper step.
-  const screenKey = view.name === 'look' ? `look-${view.id}` : view.name
-  const kind: 'grow' | 'deeper' = view.name === 'pending' ? 'deeper' : 'grow'
-
   return (
     <motion.div
       className="absolute inset-0 flex flex-col overflow-hidden bg-white"
@@ -712,41 +776,7 @@ export function Studio({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="relative min-h-0 flex-1 pt-4">
-        <AnimatePresence mode="popLayout" initial={false} custom={kind}>
-          <motion.div
-            key={screenKey}
-            className="h-full"
-            custom={kind}
-            variants={{
-              enter: (k: typeof kind) => (k === 'grow' ? { opacity: 1 } : { opacity: 0, x: 28 }),
-              center: { opacity: 1, x: 0 },
-              exit: (k: typeof kind) => (k === 'grow' ? { opacity: 0 } : { opacity: 0, x: -28 }),
-            }}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-          >
-            {view.name === 'home' && <HomePanels />}
-            {view.name === 'pending' && (
-              <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
-                <PendingCard source={genSource} />
-                <Caption isBase />
-              </div>
-            )}
-            {view.name === 'look' && look && (
-              <div className={cn('flex h-full flex-col px-2', CTA_SPACE)}>
-                <LookCard
-                  look={look}
-                  isBase={false}
-                  active
-                  layoutId={view.fromGrid ? trialLayoutId(look.id) : undefined}
-                />
-                <Caption isBase={false} />
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <StudioScreens />
       </main>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-6 pb-4 pt-4">

@@ -5,6 +5,7 @@ import {
   GENERATING_STEPS,
   RENDERS,
   SLOT_SUGGESTIONS,
+  V4_GARMENTS,
   ZARA_TEDDY,
   garmentById,
   resolveRender,
@@ -41,6 +42,10 @@ export type SheetRoute =
   | { name: 'redo-upload' }
   | { name: 'guidelines' }
   | { name: 'credits' }
+  /** v4 on the phone: the side panel (pick / complete the look) as a sheet. */
+  | { name: 'panel' }
+  /** v4 "View Attire": v2's slot grid, as a sheet on the phone. */
+  | { name: 'attire' }
 
 export type Banner =
   | { kind: 'info'; text: string }
@@ -131,10 +136,14 @@ export const USER_TYPE: 'new' | 'repeat' = params.get('user_type') === 'repeat' 
  * `?version=1` (the default) completes the look in the slot-list sheet.
  * `?version=2` opens the full-screen "Create Look" grid, after Doji.
  * `?version=3` merges picking and completing into one outfit sheet: the same
- * tray of slots starts a look and completes it. Other versions fall back to 1.
+ * tray of slots starts a look and completes it. `?version=4` is the desktop
+ * layout (Figma p3OWFjk2XX1hlhkspVe7qQ 3390:229694): Pick an outfit beside the
+ * photo, with "Complete the look" as one wide sheet tabbed by asset type.
+ * Other versions fall back to 1.
  */
 const versionParam = params.get('version')
-export const VERSION: 1 | 2 | 3 = versionParam === '2' ? 2 : versionParam === '3' ? 3 : 1
+export const VERSION: 1 | 2 | 3 | 4 =
+  versionParam === '2' ? 2 : versionParam === '3' ? 3 : versionParam === '4' ? 4 : 1
 
 /** v3 outfit sheet tabs: For you, then one per slot. */
 export type OutfitTab = 'for-you' | Slot
@@ -215,6 +224,8 @@ export type TryItOnState = {
   buyCredits: (credits: number) => void
 
   openBuilder: (tab?: OutfitTab) => void
+  /** v4: the page itself is the picker, so a draft exists from the start (no-op if one already does). */
+  startDraft: () => void
   closeBuilder: () => void
   toggleLock: (slot: Slot) => void
   styleMe: () => void
@@ -257,9 +268,11 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       return { sheets: i === -1 ? s.sheets : s.sheets.slice(0, i + 1) }
     }),
   closeSheets: () => set({ sheets: [], builderNotice: null }),
+  // v4 stacks the builder, slots and links on its panel or attire sheet, so those count as "the builder" too.
   returnToBuilder: () =>
     set((s) => {
-      const i = s.sheets.map((r) => r.name).lastIndexOf('builder')
+      const names = s.sheets.map((r) => r.name)
+      const i = Math.max(names.lastIndexOf('builder'), names.lastIndexOf('panel'), names.lastIndexOf('attire'))
       return { sheets: i === -1 ? [] : s.sheets.slice(0, i + 1) }
     }),
   setBuilderNotice: (builderNotice) => set({ builderNotice }),
@@ -335,17 +348,20 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
     }))
   },
 
-  // v3 starts a new look in the same outfit sheet, empty (everything is the base).
+  // v3 starts a new look in the same outfit sheet, empty (everything is the base);
+  // v4 starts it on the page, whose Top Picks are the first step.
   createNewLook: () =>
     set((st) =>
-      VERSION === 3
-        ? {
-            view: { name: 'home', panel: 0 },
-            draft: toDraft(st.base.pieces),
-            builderNotice: null,
-            sheets: [{ name: 'builder', tab: 'for-you' }],
-          }
-        : { view: { name: 'home', panel: 0 }, sheets: [{ name: 'pick' }] },
+      VERSION === 4
+        ? { view: { name: 'home', panel: 0 }, draft: toDraft(st.base.pieces), builderNotice: null, sheets: [] }
+        : VERSION === 3
+          ? {
+              view: { name: 'home', panel: 0 },
+              draft: toDraft(st.base.pieces),
+              builderNotice: null,
+              sheets: [{ name: 'builder', tab: 'for-you' }],
+            }
+          : { view: { name: 'home', panel: 0 }, sheets: [{ name: 'pick' }] },
     ),
 
   refreshBase: () => {
@@ -375,6 +391,8 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
         : { draft: toDraft(currentLook(st).pieces), builderNotice: null, sheets: [{ name: 'builder', tab }] },
     ),
 
+  startDraft: () => set((st) => (st.draft ? st : { draft: toDraft(currentLook(st).pieces) })),
+
   closeBuilder: () => set({ builderOpen: false, sheets: [], builderNotice: null }),
 
   toggleLock: (slot) =>
@@ -391,7 +409,9 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
     for (const slot of STYLE_ME_SLOTS) {
       if (draft.locked[slot] || (dressLocked && slot !== 'outerwear')) continue
       const current = get().draft?.pieces[slot]?.id
-      const options = SLOT_SUGGESTIONS[slot].filter((id) => id !== current)
+      // v4 restyles from its own catalog (Figma 3380:166586), v1–v3 from the suggestions.
+      const pool = VERSION === 4 ? V4_GARMENTS.filter((g) => g.slot === slot).map((g) => g.id) : SLOT_SUGGESTIONS[slot]
+      const options = pool.filter((id) => id !== current)
       const pick = garmentById(options[Math.floor(Math.random() * options.length)])
       if (pick) {
         get().setDraftPiece(pick)

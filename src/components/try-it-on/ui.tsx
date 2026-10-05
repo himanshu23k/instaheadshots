@@ -195,7 +195,7 @@ export function GarmentImage({
         src={garment.image}
         alt=""
         draggable={false}
-        className={box ? 'h-auto' : cn('absolute inset-0 size-full', crop ? 'object-cover' : 'object-contain')}
+        className={box ? 'h-auto' : cn('absolute inset-0 size-full', crop || garment.fill ? 'object-cover' : 'object-contain')}
         style={style}
       />
     </div>

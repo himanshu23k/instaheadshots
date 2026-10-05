@@ -9,7 +9,7 @@
 const A = '/try-it-on'
 
 /** Builder slots, in the order the Complete the Look sheet lists them. */
-export type Slot = 'top' | 'bottom' | 'dress' | 'outerwear' | 'shoes' | 'bag' | 'glasses' | 'hat'
+export type Slot = 'top' | 'bottom' | 'dress' | 'outerwear' | 'shoes' | 'bag' | 'glasses' | 'hat' | 'jewelry'
 
 export const SLOT_ORDER: Slot[] = ['top', 'bottom', 'dress', 'outerwear', 'shoes', 'bag']
 
@@ -22,6 +22,7 @@ export const SLOT_LABEL: Record<Slot, string> = {
   bag: 'Bag',
   glasses: 'Glasses',
   hat: 'Hat',
+  jewelry: 'Jewelry',
 }
 
 export type PieceSource = 'base' | 'catalog' | 'link' | 'upload'
@@ -41,27 +42,22 @@ export type Garment = {
   crop?: { position: string; scale: number }
   /** Catalog piece to render with — link/upload pieces borrow the closest one. */
   renderAs?: string
+  /** A full studio photo rather than a cut-out: it covers its tile instead of sitting inside it. */
+  fill?: boolean
 }
 
 // ── The two pieces the base photo is wearing ─────────────────────────────────
 export const BASE_PIECES: Garment[] = [
-  {
-    id: 'base-tee',
-    name: 'White tee',
-    slot: 'top',
-    image: `${A}/base.jpg`,
-    look: 'product',
-    source: 'base',
-    crop: { position: '50% 48%', scale: 2.2 },
-  },
+  // Figma 3380:166586 "Mannequin": the base outfit's own pieces, shot like the catalog.
+  { id: 'base-tee', name: 'White tee', slot: 'top', image: `${A}/v4/m-base-tee.jpg`, look: 'mannequin', source: 'base', fill: true },
   {
     id: 'base-jeans',
     name: 'Black jeans',
     slot: 'bottom',
-    image: `${A}/base.jpg`,
-    look: 'product',
+    image: `${A}/v4/m-base-trousers.jpg`,
+    look: 'mannequin',
     source: 'base',
-    crop: { position: '50% 96%', scale: 2.2 },
+    fill: true,
   },
 ]
 
@@ -90,8 +86,62 @@ export const GARMENTS: Garment[] = [
   g('denim-dress', 'Denim Dress', 'dress', 'p-denim-dress.jpg', ['occasional', 'casual'], 'product'),
 ]
 
+/**
+ * v4's catalog — Figma 3380:166586 ("🍍 assets"), every piece on a studio
+ * mannequin. There are no renders of these yet, so each borrows the nearest
+ * piece that has one (`renderAs`) for the pre-rendered result.
+ */
+const v4 = (
+  id: string,
+  name: string,
+  slot: Slot,
+  renderAs?: string,
+): Garment => ({ id, name, slot, image: `${A}/v4/${id}.jpg`, look: 'mannequin', source: 'catalog', renderAs, fill: true })
+
+export const V4_GARMENTS: Garment[] = [
+  v4('t-white-tee', 'White Tee', 'top', 'base-tee'),
+  v4('t-purple-corset', 'Purple Corset', 'top', 'checks-shirt'),
+  v4('t-black-cami', 'Black Satin Cami', 'top', 'checks-shirt'),
+  v4('t-blue-shirt', 'Light Blue Shirt', 'top', 'checks-shirt'),
+  v4('t-white-shirt', 'White Shirt', 'top', 'checks-shirt'),
+  v4('t-sage-tee', 'Sage Tee', 'top', 'base-tee'),
+  v4('t-sage-puff', 'Sage Puff Sleeve Top', 'top', 'checks-shirt'),
+  v4('l-grey-hoodie', 'Grey Zip Hoodie', 'outerwear', 'leather-jacket'),
+  v4('l-denim-jacket', 'Denim Jacket', 'outerwear', 'denim-jacket'),
+  v4('l-camel-blazer', 'Camel Blazer', 'outerwear', 'leather-jacket'),
+  v4('l-cream-cardigan', 'Cream Cardigan', 'outerwear', 'leather-jacket'),
+  v4('l-olive-overshirt', 'Olive Overshirt', 'outerwear', 'leather-jacket'),
+  v4('b-white-palazzo', 'White Palazzo', 'bottom', 'denim-jeans'),
+  v4('b-light-jeans', 'Light Wash Jeans', 'bottom', 'denim-jeans'),
+  v4('b-black-trousers', 'Black Wide Trousers', 'bottom', 'denim-jeans'),
+  v4('b-beige-skirt', 'Beige Pleated Skirt', 'bottom', 'denim-jeans'),
+  v4('b-denim-shorts', 'Denim Shorts', 'bottom', 'denim-jeans'),
+  v4('d-black-slip', 'Black Slip Dress', 'dress', 'denim-dress'),
+  v4('d-red-dress', 'Red One-Shoulder Dress', 'dress', 'denim-dress'),
+  v4('d-yellow-maxi', 'Yellow Tiered Maxi', 'dress', 'denim-dress'),
+  v4('d-mustard-kurta', 'Mustard Kurta', 'dress', 'denim-dress'),
+  v4('d-indigo-kurta', 'Indigo Print Kurta', 'dress', 'denim-dress'),
+  v4('d-lehenga', 'Lehenga Set', 'dress', 'denim-dress'),
+  v4('s-white-sneakers', 'White Sneakers', 'shoes'),
+  v4('s-black-pumps', 'Black Pumps', 'shoes'),
+  v4('s-suede-boots', 'Tan Suede Boots', 'shoes'),
+  v4('s-brown-loafers', 'Brown Loafers', 'shoes'),
+  v4('a-black-shoulder-bag', 'Black Shoulder Bag', 'bag'),
+  v4('a-canvas-tote', 'Canvas Tote', 'bag'),
+  v4('a-tan-handbag', 'Tan Top-Handle Bag', 'bag'),
+  v4('a-gold-potli', 'Gold Potli', 'bag'),
+  { ...v4('a-tortoise-sunglasses', 'Tortoise Sunglasses', 'glasses'), image: `${A}/v4/a-tortoise-sunglasses.png` },
+  v4('a-green-cap', 'Green Cap', 'hat'),
+  v4('a-gold-earrings', 'Gold Earrings', 'jewelry'),
+  v4('a-gold-pendant', 'Gold Pendant', 'jewelry'),
+  v4('a-silver-watch', 'Silver Watch', 'jewelry'),
+]
+
+/** v4 Top Picks on the base — Figma 3390:237585 (Purple Corset, Grey Zipper, Black Dress). */
+export const V4_TOP_PICKS = ['t-purple-corset', 'l-grey-hoodie', 'd-black-slip']
+
 export const garmentById = (id: string): Garment | undefined =>
-  GARMENTS.find((x) => x.id === id) ?? BASE_PIECES.find((x) => x.id === id)
+  GARMENTS.find((x) => x.id === id) ?? V4_GARMENTS.find((x) => x.id === id) ?? BASE_PIECES.find((x) => x.id === id)
 
 /** "Suggested for you" on the very first pick — Figma 370:45070. */
 export const FIRST_SUGGESTIONS = ['denim-jacket', 'strips-shrug', 'checks-shirt']
@@ -127,6 +177,7 @@ export const SLOT_SUGGESTIONS: Record<Slot, string[]> = {
   bag: [],
   glasses: [],
   hat: [],
+  jewelry: [],
 }
 
 // ── Paste a product link ─────────────────────────────────────────────────────
@@ -182,6 +233,57 @@ export const ZARA_TEDDY: LinkProduct = {
   ],
 }
 
+/**
+ * v4 "Uploads/Product Links" (Figma 3380:166586): one product per page, shot flat.
+ * Which one a link finds is picked from the link itself, so different links
+ * find different products; a link to the teddy jacket still finds it.
+ */
+const flatProduct = (
+  id: string,
+  title: string,
+  store: string,
+  name: string,
+  slot: Slot,
+  renderAs: string,
+): LinkProduct => {
+  const image = `${A}/v4/${id}.jpg`
+  return {
+    title,
+    store,
+    photos: [{ id: 'flat', label: 'Flat', image }],
+    items: [{ id, name, slot, image, look: 'product', source: 'link', renderAs, found: { x: 8, y: 6, w: 84, h: 88 } }],
+  }
+}
+
+export const LINK_PRODUCTS: LinkProduct[] = [
+  flatProduct('p-linen-shirt', 'Linen shirt from COS, $89', 'COS', 'Linen Shirt', 'top', 'checks-shirt'),
+  flatProduct('p-sage-puff-top', 'Puff sleeve top from Mango, $46', 'Mango', 'Sage Puff Sleeve Top', 'top', 'checks-shirt'),
+  flatProduct('p-sage-midi-skirt', 'Linen midi skirt from Mango, $59', 'Mango', 'Sage Midi Skirt', 'bottom', 'denim-jeans'),
+  flatProduct('p-rust-overshirt', 'Corduroy overshirt from Arket, $99', 'Arket', 'Rust Overshirt', 'outerwear', 'leather-jacket'),
+  flatProduct('p-brown-trousers', 'Wide trousers from & Other Stories, $119', '& Other Stories', 'Brown Wide Trousers', 'bottom', 'denim-jeans'),
+]
+
+/** Words in a link that point at one product: its store, or what it is. */
+const LINK_HINTS: [RegExp, string][] = [
+  [/teddy|zara/, 'teddy'],
+  [/cos\.|linen-?shirt|shirt/, 'p-linen-shirt'],
+  [/skirt/, 'p-sage-midi-skirt'],
+  [/mango|puff|top/, 'p-sage-puff-top'],
+  [/arket|overshirt|jacket/, 'p-rust-overshirt'],
+  [/stories|trouser|pant/, 'p-brown-trousers'],
+]
+
+export function productForLink(url: string): LinkProduct {
+  const u = url.toLowerCase()
+  const hint = LINK_HINTS.find(([re]) => re.test(u))?.[1]
+  if (hint === 'teddy') return ZARA_TEDDY
+  const hinted = LINK_PRODUCTS.find((p) => p.items[0].id === hint)
+  if (hinted) return hinted
+  let h = 0
+  for (const ch of url) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return LINK_PRODUCTS[h % LINK_PRODUCTS.length]
+}
+
 /** Links that fail, so the error states in Figma (370:56843, 370:56872) can be reached. */
 export function classifyLink(url: string): 'ok' | 'invalid' | 'blocked' {
   const u = url.trim().toLowerCase()
@@ -198,6 +300,49 @@ export type UploadSample = {
   image: string
   items: FoundItem[]
 }
+
+const photoItem = (
+  id: string,
+  name: string,
+  slot: Slot,
+  found: FoundItem['found'],
+  renderAs?: string,
+): FoundItem => ({ id, name, slot, image: '', look: 'product', source: 'upload', renderAs, found })
+
+/** Real-life photos from Figma 3380:166586 "Uploads/Product Links"; boxes are percent of the photo. */
+export const V4_UPLOAD_SAMPLES: UploadSample[] = [
+  {
+    id: 'mirror-overshirt',
+    label: 'Mirror selfie',
+    image: `${A}/v4/u-mirror-overshirt.jpg`,
+    items: [
+      photoItem('up-olive-overshirt', 'Olive Overshirt', 'outerwear', { x: 34, y: 23, w: 26, h: 29 }, 'leather-jacket'),
+      photoItem('up-cream-trousers', 'Cream Trousers', 'bottom', { x: 36, y: 40, w: 24, h: 47 }, 'denim-jeans'),
+      photoItem('up-white-sneakers', 'White Sneakers', 'shoes', { x: 42, y: 80, w: 18, h: 11 }),
+    ],
+  },
+  {
+    id: 'street-duo',
+    label: 'Street photo',
+    image: `${A}/v4/u-street-duo.jpg`,
+    items: [
+      photoItem('up-rust-jacket', 'Rust Jacket', 'outerwear', { x: 30, y: 27, w: 23, h: 26 }, 'leather-jacket'),
+      photoItem('up-brown-trousers', 'Brown Trousers', 'bottom', { x: 35, y: 42, w: 17, h: 47 }, 'denim-jeans'),
+      photoItem('up-green-knit', 'Green Knit', 'top', { x: 52, y: 27, w: 20, h: 24 }, 'knitwear'),
+      photoItem('up-brown-bag', 'Brown Shoulder Bag', 'bag', { x: 62, y: 43, w: 12, h: 10 }),
+    ],
+  },
+  {
+    id: 'mirror-jeans',
+    label: 'Tee and jeans',
+    image: `${A}/v4/u-mirror-jeans.jpg`,
+    items: [
+      photoItem('up-oversized-tee', 'Oversized Tee', 'top', { x: 34, y: 27, w: 26, h: 23 }, 'base-tee'),
+      photoItem('up-light-jeans', 'Light Wash Jeans', 'bottom', { x: 38, y: 46, w: 20, h: 43 }, 'denim-jeans'),
+      photoItem('up-white-trainers', 'White Trainers', 'shoes', { x: 38, y: 82, w: 16, h: 12 }),
+    ],
+  },
+]
 
 export const UPLOAD_SAMPLES: UploadSample[] = [
   {
@@ -387,6 +532,47 @@ export function framingHint(pieces: Garment[], added: Garment[]): string | null 
     if (under && under.source !== 'base') return `This will get added onto your ${under.name}`
   }
   return null
+}
+
+/**
+ * v4 "Complete the look" tabs (Figma 3396:15993), one per kind of attire tile,
+ * each covering the builder slots it holds. `icon` is that type's art from
+ * Figma 3380:218932, shown wherever the type has nothing picked yet; Dress and
+ * Shoes have none there, so they fall back to the attire grid's ghost art.
+ */
+export type LookTab = 'top' | 'layer' | 'bottom' | 'dress' | 'shoes' | 'accessories'
+
+export const LOOK_TABS: { id: LookTab; label: string; slots: Slot[]; icon?: string; upload: string }[] = [
+  { id: 'top', label: 'Top', slots: ['top'], icon: `${A}/type-top.png`, upload: 'Upload a top' },
+  { id: 'layer', label: 'Layer', slots: ['outerwear'], icon: `${A}/type-layer.png`, upload: 'Upload a layer' },
+  { id: 'bottom', label: 'Bottoms', slots: ['bottom'], icon: `${A}/type-bottom.png`, upload: 'Upload bottoms' },
+  { id: 'dress', label: 'Dress', slots: ['dress'], upload: 'Upload a dress' },
+  { id: 'shoes', label: 'Shoes', slots: ['shoes'], upload: 'Upload shoes' },
+  {
+    id: 'accessories',
+    label: 'Accessories',
+    slots: ['bag', 'glasses', 'hat', 'jewelry'],
+    icon: `${A}/type-accessories.png`,
+    upload: 'Upload an accessory',
+  },
+]
+
+export const lookTabFor = (slot: Slot): LookTab => LOOK_TABS.find((t) => t.slots.includes(slot))!.id
+
+/** What a tab is wearing; accessories show the first one picked. */
+export function pieceInTab(pieces: Partial<Record<Slot, Garment>>, tab: LookTab): Garment | undefined {
+  const def = LOOK_TABS.find((t) => t.id === tab)!
+  return def.slots.map((s) => pieces[s]).find((p): p is Garment => !!p)
+}
+
+/**
+ * First tab still on your base — where completing the look picks up. A dress
+ * stands in for top and bottoms, and either of those rules the dress out.
+ */
+export function firstEmptyTab(pieces: Partial<Record<Slot, Garment>>): LookTab {
+  const covered = (t: LookTab) =>
+    (!!pieces.dress && (t === 'top' || t === 'bottom')) || (t === 'dress' && !!(pieces.top || pieces.bottom))
+  return LOOK_TABS.find((t) => !pieceInTab(pieces, t.id) && !covered(t.id))?.id ?? 'top'
 }
 
 /**

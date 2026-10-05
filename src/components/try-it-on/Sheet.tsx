@@ -7,6 +7,8 @@ import { C, FONT } from './tokens'
 import { CollectionSheet, LinkSheet, PickSheet, TrySheet, UploadPiecesSheet, UploadSheet } from './sheets/pick-sheets'
 import { BuilderSheet, FoundSheet, NotFoundSheet, SlotSheet, SwapSheet } from './sheets/builder-sheets'
 import { OutfitSheet } from './sheets/outfit-sheet'
+import { CompleteLookSheet } from './sheets/complete-look-sheet'
+import { AttireSheet, OutfitPanelSheet } from './sheets/outfit-panel'
 import { CreditsSheet, GuidelinesSheet, RedoSheet, RedoUploadSheet } from './sheets/account-sheets'
 
 const EASE = [0.32, 0.72, 0, 1] as const
@@ -26,7 +28,8 @@ function SheetBody({ route }: { route: SheetRoute }) {
     case 'collection':
       return <CollectionSheet route={route} />
     case 'builder':
-      // v3 picks and completes in one outfit sheet; v1 completes in the slot list.
+      // v3 picks and completes in one outfit sheet, v4 in the wide asset-type sheet; v1 in the slot list.
+      if (VERSION === 4) return <CompleteLookSheet route={route} />
       return VERSION === 3 ? <OutfitSheet route={route} /> : <BuilderSheet />
     case 'slot':
       return <SlotSheet route={route} />
@@ -44,6 +47,10 @@ function SheetBody({ route }: { route: SheetRoute }) {
       return <GuidelinesSheet />
     case 'credits':
       return <CreditsSheet />
+    case 'panel':
+      return <OutfitPanelSheet />
+    case 'attire':
+      return <AttireSheet />
   }
 }
 
@@ -57,6 +64,8 @@ export function SheetHost() {
   const closeSheets = useTryItOnStore((s) => s.closeSheets)
   const top = sheets.at(-1)
   const depth = sheets.length
+  // v4's Complete the look is Figma's 896 desktop sheet; every other step keeps the phone width.
+  const wide = VERSION === 4 && top?.name === 'builder'
   const drag = useDragControls()
 
   // Measure the active step so the panel can animate to its height.
@@ -98,12 +107,18 @@ export function SheetHost() {
             transition={{ duration: 0.3, ease: EASE }}
             onClick={closeSheets}
           />
-          <div className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[440px] justify-center">
+          {/* v1–v3 live in a 440 phone column, so their sheets match it. v4 fills the window
+              below the web breakpoint, so its sheets go edge to edge there. */}
+          <div
+            className={`absolute inset-x-0 bottom-0 mx-auto flex w-full justify-center ${
+              wide ? 'web:max-w-[896px]' : VERSION === 4 ? 'web:max-w-[440px]' : 'max-w-[440px]'
+            }`}
+          >
             <motion.div
               role="dialog"
               aria-modal="true"
               className="pointer-events-auto relative w-full overflow-hidden rounded-t-[16px] bg-white"
-              style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))', maxHeight: 'calc(100dvh - 24px)' }}
+              style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))', maxHeight: '90dvh' }}
               initial={{ y: '100%' }}
               animate={{ y: 0, height }}
               exit={{ y: '100%' }}
@@ -124,7 +139,7 @@ export function SheetHost() {
               >
                 <span className="h-1 w-12 rounded-full" style={{ background: C.grey12 }} />
               </div>
-              <div ref={innerRef} className="flex flex-col" style={{ maxHeight: 'calc(100dvh - 24px)' }}>
+              <div ref={innerRef} className="flex flex-col" style={{ maxHeight: '90dvh' }}>
                 <AnimatePresence mode="popLayout" initial={false} custom={direction}>
                   <motion.div
                     key={`${depth}-${top.name}`}

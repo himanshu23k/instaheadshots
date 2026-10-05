@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { currentLook, useTryItOnStore, withPiece, type SheetRoute } from '@/store/try-it-on-store'
+import { VERSION, currentLook, useTryItOnStore, withPiece, type SheetRoute } from '@/store/try-it-on-store'
 import {
   COLLECTION,
   COLLECTION_FILTERS,
   FIRST_SUGGESTIONS,
   SLOT_LABEL,
   UPLOAD_SAMPLES,
+  V4_UPLOAD_SAMPLES,
   ZARA_TEDDY,
   classifyLink,
   framingHint,
@@ -449,6 +450,9 @@ export function DropZone({
   )
 }
 
+/** v4 seeds its own photos (Figma 3380:166586 "Uploads/Product Links"). */
+const SAMPLES = VERSION === 4 ? V4_UPLOAD_SAMPLES : UPLOAD_SAMPLES
+
 export function UploadSheet({ route }: { route: Route<'upload'> }) {
   const replaceSheet = useTryItOnStore((s) => s.replaceSheet)
   const popSheet = useTryItOnStore((s) => s.popSheet)
@@ -487,7 +491,7 @@ export function UploadSheet({ route }: { route: Route<'upload'> }) {
     if (file.size > MAX_UPLOAD) return setError('size')
     if (new URLSearchParams(window.location.search).get('upload') === 'fail') return setError('failed')
     // We can't read pieces out of a real photo yet, so it's treated like the street sample.
-    start(UPLOAD_SAMPLES[0], URL.createObjectURL(file))
+    start(SAMPLES[0], URL.createObjectURL(file))
   }
 
   return (
@@ -513,7 +517,7 @@ export function UploadSheet({ route }: { route: Route<'upload'> }) {
                 No photo handy? Try one of these
               </p>
               <div className="flex gap-3">
-                {UPLOAD_SAMPLES.map((s) => (
+                {SAMPLES.map((s) => (
                   <button
                     key={s.id}
                     type="button"

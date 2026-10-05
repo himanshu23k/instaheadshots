@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, ChevronRight, Lock, LockOpen, Sparkles, X } from 'lucide-react'
-import { currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
+import { VERSION, currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
 import { SLOT_LABEL, type Garment, type Slot } from './try-it-on-data'
 import { Credits, CreditsIcon, GarmentImage, Notice } from './ui'
 import { LinkField } from './sheets/pick-sheets'
@@ -68,6 +68,45 @@ export function GhostArt({ kind }: { kind: Slot }) {
   )
 }
 
+/**
+ * The one placeholder each slot shows while nothing is picked there — the same
+ * art in the attire grid, the slot strip and the v3 tray. Top, layer and bottoms
+ * are Figma's asset-type icons (3380:218932).
+ */
+const SLOT_PHOTO: Partial<Record<Slot, string>> = {
+  top: '/try-it-on/type-top.png',
+  outerwear: '/try-it-on/type-layer.png',
+  bottom: '/try-it-on/type-bottom.png',
+  dress: '/try-it-on/type-dress.jpg',
+  shoes: '/try-it-on/slot-shoes.jpg',
+  bag: '/try-it-on/slot-bag.jpg',
+  glasses: '/try-it-on/slot-glasses.jpg',
+  hat: '/try-it-on/slot-hat.jpg',
+}
+
+/** Bag, glasses and hat together, for v4's one Accessories tile and slot. */
+const ACCESSORIES_PHOTO = '/try-it-on/type-accessories.png'
+
+/**
+ * What an empty slot shows: a photo that covers its (relative) parent where
+ * there is one, the ghost drawing otherwise.
+ */
+export function SlotArt({ kind }: { kind: Slot }) {
+  const photo = SLOT_PHOTO[kind]
+  if (photo) return <PlaceholderPhoto src={photo} />
+  return <GhostArt kind={kind} />
+}
+
+/** The asset-type icons are cut-outs, so they sit on the same light grey as the studio photos' backdrop. */
+function PlaceholderPhoto({ src }: { src: string }) {
+  return <img src={src} alt="" draggable={false} className="absolute inset-0 size-full bg-[#E9EAED] object-cover" />
+}
+
+export function AccessoriesArt() {
+  return <PlaceholderPhoto src={ACCESSORIES_PHOTO} />
+}
+
+
 // ── Tiles ────────────────────────────────────────────────────────────────────
 
 const TILES: { slot: Slot; empty: string }[] = [
@@ -80,6 +119,18 @@ const TILES: { slot: Slot; empty: string }[] = [
   { slot: 'glasses', empty: 'Add Glasses' },
   { slot: 'hat', empty: 'Add a Hat' },
 ]
+
+/** v4 "View Attire": the collection's tabs, in its order, with bag, glasses and hat as one Accessories tile. */
+const V4_TILES: { slot: Slot | 'accessories'; empty: string }[] = [
+  { slot: 'top', empty: 'Select a Top' },
+  { slot: 'outerwear', empty: 'Add a Layer' },
+  { slot: 'bottom', empty: 'Select Bottoms' },
+  { slot: 'dress', empty: 'Select a Dress' },
+  { slot: 'shoes', empty: 'Select Shoes' },
+  { slot: 'accessories', empty: 'Add Accessories' },
+]
+
+const ACCESSORY_SLOTS: Slot[] = ['bag', 'glasses', 'hat', 'jewelry']
 
 function TileLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -118,7 +169,7 @@ function FilledTile({ slot, piece }: { slot: Slot; piece: Garment }) {
           <X size={20} strokeWidth={1.4} />
         </button>
       </div>
-      <GarmentImage garment={piece} background="#FFFFFF" className="my-1.5 min-h-0 flex-1" />
+      <GarmentImage garment={piece} background="#FFFFFF" className="my-1.5 min-h-0 flex-1 rounded-[8px]" />
       <div className="flex flex-col gap-1.5">
         {yours && (
           <span
@@ -136,20 +187,25 @@ function FilledTile({ slot, piece }: { slot: Slot; piece: Garment }) {
   )
 }
 
-function Tile({ slot, empty, index }: { slot: Slot; empty: string; index: number }) {
+function Tile({ slot, empty, index, lines }: { slot: Slot; empty: string; index: number; lines: boolean }) {
   const draft = useTryItOnStore((s) => s.draft)
   const openSheet = useTryItOnStore((s) => s.openSheet)
+  const pushSheet = useTryItOnStore((s) => s.pushSheet)
+  const inSheet = useTryItOnStore((s) => s.sheets.length > 0)
   const piece = draft?.pieces[slot]
   // A dress covers Top and Bottoms; picking either swaps the dress out.
   const covered = (slot === 'top' || slot === 'bottom') && !!draft?.pieces.dress && !piece
-  const open = () => openSheet({ name: 'slot', slot })
+  // v4's attire grid can itself be a sheet; the next step then stacks on it so back returns here.
+  // v4 picks from its collection, opened on this tile's tab; v2 has a sheet per slot.
+  const open = () =>
+    (inSheet ? pushSheet : openSheet)(VERSION === 4 ? { name: 'builder', tab: slot } : { name: 'slot', slot })
 
   const label = piece ? `Change ${piece.name}` : covered ? `Swap your dress for a ${SLOT_LABEL[slot].toLowerCase()}` : empty
   return (
     // The whole tile opens the slot; lock and ✕ sit above that button rather than inside it.
     <div
       className="relative flex aspect-[46/54] flex-col p-4"
-      style={{ borderBottom: `1px solid ${LINE}`, borderRight: index % 2 === 0 ? `1px solid ${LINE}` : 'none' }}
+      style={lines ? { borderBottom: `1px solid ${LINE}`, borderRight: index % 2 === 0 ? `1px solid ${LINE}` : 'none' } : undefined}
     >
       <button
         type="button"
@@ -162,8 +218,8 @@ function Tile({ slot, empty, index }: { slot: Slot; empty: string; index: number
           <FilledTile slot={slot} piece={piece} />
         ) : (
           <>
-            <div className="flex min-h-0 flex-1 items-center justify-center">
-              <GhostArt kind={slot} />
+            <div className="relative my-1.5 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[8px]">
+              <SlotArt kind={slot} />
             </div>
             {covered ? (
               <span className="text-center text-[14px] leading-[18px]" style={{ color: C.secondary }}>
@@ -175,6 +231,130 @@ function Tile({ slot, empty, index }: { slot: Slot; empty: string; index: number
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * v4's one tile for bag, glasses and hat. It opens the collection on its
+ * Accessories tab (one slot sheet can't cover three slots), shows the first
+ * accessory picked, and ✕ takes them all off.
+ */
+function AccessoriesTile({ empty, index, lines }: { empty: string; index: number; lines: boolean }) {
+  const draft = useTryItOnStore((s) => s.draft)
+  const openSheet = useTryItOnStore((s) => s.openSheet)
+  const pushSheet = useTryItOnStore((s) => s.pushSheet)
+  const removeDraftSlot = useTryItOnStore((s) => s.removeDraftSlot)
+  const inSheet = useTryItOnStore((s) => s.sheets.length > 0)
+  const pieces = ACCESSORY_SLOTS.map((slot) => draft?.pieces[slot]).filter((p): p is Garment => !!p)
+  const names = pieces.map((p) => p.name).join(', ')
+  const open = () => (inSheet ? pushSheet : openSheet)({ name: 'builder', tab: 'bag' })
+
+  return (
+    <div
+      className="relative flex aspect-[46/54] flex-col p-4"
+      style={lines ? { borderBottom: `1px solid ${LINE}`, borderRight: index % 2 === 0 ? `1px solid ${LINE}` : 'none' } : undefined}
+    >
+      <button
+        type="button"
+        onClick={open}
+        aria-label={pieces.length ? `Change ${names}` : empty}
+        className="absolute inset-0 outline-none transition-colors hover:bg-[#FCFCFC] focus-visible:bg-[#F7F7F8]"
+      />
+      <div className="pointer-events-none relative flex min-h-0 flex-1 flex-col">
+        {pieces.length ? (
+          <>
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => ACCESSORY_SLOTS.forEach((slot) => removeDraftSlot(slot))}
+                aria-label={`Remove ${names}`}
+                className="pointer-events-auto -m-2 p-2 transition-opacity hover:opacity-70"
+                style={{ color: '#B5B8BF' }}
+              >
+                <X size={20} strokeWidth={1.4} />
+              </button>
+            </div>
+            <GarmentImage garment={pieces[0]} background="#FFFFFF" className="my-1.5 min-h-0 flex-1 rounded-[8px]" />
+            <span className="line-clamp-2 text-[15px] leading-[18px]" style={{ fontWeight: 420, color: C.text }}>
+              {names}
+            </span>
+          </>
+        ) : (
+          <>
+            <div className="relative my-1.5 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[8px]">
+              <AccessoriesArt />
+            </div>
+            <TileLabel>{empty}</TileLabel>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Shared with v4 "View Attire" ─────────────────────────────────────────────
+
+/**
+ * Every slot as a tile, two across — empty ones show a ghost of what goes
+ * there. `v4` follows the collection's tabs and folds the accessories into one.
+ */
+export function AttireGrid({ layout = 'v2' }: { layout?: 'v2' | 'v4' }) {
+  const tiles = layout === 'v4' ? V4_TILES : TILES
+  const lines = layout === 'v2'
+  return (
+    // v2's Create Look rules its tiles into a grid; v4's View Attire leaves them unruled, spaced by their padding.
+    <div className="grid grid-cols-2" style={lines ? { borderTop: `1px solid ${LINE}` } : undefined}>
+      {tiles.map((t, i) =>
+        t.slot === 'accessories' ? (
+          <AccessoriesTile key={t.slot} empty={t.empty} index={i} lines={lines} />
+        ) : (
+          <Tile key={t.slot} slot={t.slot} empty={t.empty} index={i} lines={lines} />
+        ),
+      )}
+    </div>
+  )
+}
+
+/** Style Me beside Try on. Style Me restyles every slot that isn't locked. */
+export function AttireActions() {
+  const draft = useTryItOnStore((s) => s.draft)
+  const draftChanged = useTryItOnStore((s) => s.draftChanged())
+  const styleMe = useTryItOnStore((s) => s.styleMe)
+  const tryOn = useTryItOnStore((s) => s.tryOn)
+  const pieces = draft ? (Object.values(draft.pieces) as Garment[]) : []
+  const canTry = draftChanged && pieces.length > 0
+  return (
+    <div className="flex shrink-0 gap-3">
+      <button
+        type="button"
+        onClick={styleMe}
+        className="flex h-[45px] flex-1 items-center justify-center gap-2 rounded-[8px] text-[16px] leading-[18px] transition-[background-color,transform] hover:bg-[#EEEEF0] active:scale-[0.98]"
+        style={{ background: C.grey03, color: C.text, fontWeight: 450 }}
+      >
+        <Sparkles size={18} strokeWidth={1.6} /> Style Me
+      </button>
+      <button
+        type="button"
+        disabled={!canTry}
+        onClick={() => tryOn(withBase(pieces))}
+        className="flex h-[45px] flex-1 items-center justify-center gap-2 rounded-[8px] text-[16px] leading-[18px] text-white transition-transform active:scale-[0.98] disabled:active:scale-100"
+        style={{
+          background: canTry ? C.text : '#9A9B9D',
+          fontWeight: 450,
+          boxShadow: 'inset 0 2px 2px rgba(255,255,255,0.25)',
+        }}
+      >
+        Try on
+        {canTry && (
+          <>
+            <span className="h-4 w-px bg-white/40" aria-hidden />
+            <span className="flex items-center gap-1.5">
+              <CreditsIcon />1
+            </span>
+          </>
+        )}
+      </button>
     </div>
   )
 }
@@ -195,16 +375,10 @@ export function CreateLook() {
   const [url, setUrl] = useState('')
   const notice = useTryItOnStore((s) => s.builderNotice)
   const sheetOpen = useTryItOnStore((s) => s.sheets.length > 0)
-  const draftChanged = useTryItOnStore((s) => s.draftChanged())
   const closeBuilder = useTryItOnStore((s) => s.closeBuilder)
   const openSheet = useTryItOnStore((s) => s.openSheet)
   const setBuilderNotice = useTryItOnStore((s) => s.setBuilderNotice)
-  const styleMe = useTryItOnStore((s) => s.styleMe)
-  const tryOn = useTryItOnStore((s) => s.tryOn)
   if (!draft) return null
-
-  const pieces = Object.values(draft.pieces) as Garment[]
-  const canTry = draftChanged && pieces.length > 0
 
   return (
     <motion.div
@@ -262,45 +436,13 @@ export function CreateLook() {
               We'll try to identify the item type ourselves
             </p>
           </div>
-          <div className="grid grid-cols-2" style={{ borderTop: `1px solid ${LINE}` }}>
-            {TILES.map((t, i) => (
-              <Tile key={t.slot} slot={t.slot} empty={t.empty} index={i} />
-            ))}
-          </div>
+          <AttireGrid />
         </div>
 
       </div>
 
-      <div className="flex shrink-0 gap-3 bg-white px-6 pb-4 pt-3" style={{ borderTop: `1px solid ${LINE}` }}>
-        <button
-          type="button"
-          onClick={styleMe}
-          className="flex h-[45px] flex-1 items-center justify-center gap-2 rounded-[8px] text-[16px] leading-[18px] transition-[background-color,transform] hover:bg-[#EEEEF0] active:scale-[0.98]"
-          style={{ background: C.grey03, color: C.text, fontWeight: 450 }}
-        >
-          <Sparkles size={18} strokeWidth={1.6} /> Style Me
-        </button>
-        <button
-          type="button"
-          disabled={!canTry}
-          onClick={() => tryOn(withBase(pieces))}
-          className="flex h-[45px] flex-1 items-center justify-center gap-2 rounded-[8px] text-[16px] leading-[18px] text-white transition-transform active:scale-[0.98] disabled:active:scale-100"
-          style={{
-            background: canTry ? C.text : '#9A9B9D',
-            fontWeight: 450,
-            boxShadow: 'inset 0 2px 2px rgba(255,255,255,0.25)',
-          }}
-        >
-          Try on
-          {canTry && (
-            <>
-              <span className="h-4 w-px bg-white/40" aria-hidden />
-              <span className="flex items-center gap-1.5">
-                <CreditsIcon />1
-              </span>
-            </>
-          )}
-        </button>
+      <div className="shrink-0 bg-white px-6 pb-4 pt-3" style={{ borderTop: `1px solid ${LINE}` }}>
+        <AttireActions />
       </div>
       {/* Keeps the look being completed in view for screen readers. */}
       <span className="sr-only">Completing {look.pieces.map((p) => p.name).join(', ')}</span>

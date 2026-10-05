@@ -21,7 +21,7 @@ import {
 } from '../try-it-on-data'
 import { SheetFooter, SheetHeader } from '../Sheet'
 import { GalleryIcon, GarmentImage, GarmentTile, LinkIcon, Notice, PrimaryButton, TileCheck } from '../ui'
-import { GhostArt } from '../CreateLook'
+import { SlotArt } from '../CreateLook'
 import { C } from '../tokens'
 
 type Route = Extract<SheetRoute, { name: 'builder' }>
@@ -128,12 +128,12 @@ function TrayChip({
               ) : (
                 <motion.span
                   key="ghost"
-                  className="flex size-full items-center justify-center"
+                  className="relative flex size-full items-center justify-center"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: covered ? 0.35 : 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <GhostArt kind={tab} />
+                  <SlotArt kind={tab} />
                 </motion.span>
               )}
             </AnimatePresence>
@@ -315,7 +315,7 @@ export function OutfitSheet({ route }: { route: Route }) {
 
   return (
     // Fixed height so switching tabs doesn't make the sheet jump.
-    <div className="flex h-[min(720px,calc(100dvh-24px))] flex-col">
+    <div className="flex h-[min(720px,90dvh)] flex-col">
       <SheetHeader
         title={starting ? 'Pick an Outfit' : 'Complete the Look'}
         subtitle="Tap pieces to put them on. Empty slots stay as your base."
