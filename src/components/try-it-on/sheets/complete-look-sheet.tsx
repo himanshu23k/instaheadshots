@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useTryItOnStore, type Look, type SheetRoute } from '@/store/try-it-on-store'
+import { VERSION, useTryItOnStore, type Look, type SheetRoute } from '@/store/try-it-on-store'
 import {
   V4_GARMENTS,
   LOOK_TABS,
@@ -279,7 +279,17 @@ export function CompleteLookSheet({ route }: { route: Route }) {
           <LookSlots pieces={draft.pieces} tab={tab} onSelect={setTab} />
         </div>
         {/* Back to the panel, whose Create renders the look — on the phone the panel is the sheet underneath. */}
-        <PrimaryButton onClick={stacked ? popSheet : closeSheets} className="w-auto">
+        <PrimaryButton
+          // v6 came here from v1's Pick an outfit, which has no Create of its own: carry on to Try this on.
+          onClick={
+            VERSION === 6 && pieces.length
+              ? () => replaceSheet({ name: 'try', garments: pieces })
+              : stacked
+                ? popSheet
+                : closeSheets
+          }
+          className="w-auto"
+        >
           Continue
         </PrimaryButton>
       </div>

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
+import { X } from 'lucide-react'
+import { VERSION, currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
 import {
+  FIRST_SUGGESTIONS,
   LOOK_TABS,
   V4_GARMENTS,
   V4_TOP_PICKS,
@@ -13,9 +15,9 @@ import {
   type Slot,
 } from '../try-it-on-data'
 import { AttireActions, AttireGrid } from '../CreateLook'
-import { SheetFooter, SheetHeader } from '../Sheet'
-import { Credits, GarmentImage, Notice, PrimaryButton, Spinner, TileCheck } from '../ui'
-import { LinkField } from './pick-sheets'
+import { SectionLabel, SheetFooter, SheetHeader } from '../Sheet'
+import { Credits, GarmentImage, GarmentTile, Notice, PrimaryButton, Spinner, TileCheck } from '../ui'
+import { BringYourOwn, LinkField } from './pick-sheets'
 import { C } from '../tokens'
 
 const byId = (id: string) => garmentById(id) as Garment
@@ -290,6 +292,68 @@ export function PanelDock({ onViewAttire }: { onViewAttire: () => void }) {
   )
 }
 
+// ── v6: v1's Pick an outfit, in the side panel ───────────────────────────────
+
+/**
+ * v6 on web: v1's Pick an outfit sheet laid out in the side panel — Suggested
+ * for you, then Or bring your own. Its next steps (Try this on, a link, an
+ * upload, the collection) open as sheets, as they do in v1.
+ */
+export function PickPanel() {
+  const credits = useTryItOnStore((s) => s.credits)
+  const pushSheet = useTryItOnStore((s) => s.pushSheet)
+  const [selected, setSelected] = useState<string | null>(null)
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center justify-between pb-5">
+        <h1 className="text-[26px] leading-7 tracking-[-0.312px]" style={{ fontWeight: 450, color: C.text }}>
+          Pick an outfit
+        </h1>
+        <div className="-mr-1.5">
+          <Credits value={credits} />
+        </div>
+      </div>
+      {/* Negative margin + padding: tile rings and shadows reach past their boxes, and the scroll area clips at its edges. */}
+      <div className="scrollbar-hide -ml-4 -mr-6 -mt-2 min-h-0 flex-1 overflow-y-auto pb-6 pl-4 pr-6 pt-2">
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
+            <SectionLabel>Suggested for you</SectionLabel>
+            <div className="grid grid-cols-3 gap-3">
+              {FIRST_SUGGESTIONS.map((id) => {
+                const g = byId(id)
+                return (
+                  <GarmentTile
+                    key={id}
+                    garment={g}
+                    selected={selected === id}
+                    onClick={() => setSelected((s) => (s === id ? null : id))}
+                  />
+                )
+              })}
+            </div>
+          </div>
+          <BringYourOwn />
+        </div>
+      </div>
+      <AnimatePresence initial={false}>
+        {selected && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="relative -mx-6 shrink-0 bg-white px-6 pb-4 pt-3"
+            style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))' }}
+          >
+            <PrimaryButton onClick={() => pushSheet({ name: 'try', garments: [byId(selected)] })}>Continue</PrimaryButton>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ── Sheets (the phone) ───────────────────────────────────────────────────────
 
 /** v4 on the phone: the side panel as a sheet, opened from Pick an Outfit / Complete the Look. */
@@ -311,7 +375,8 @@ export function OutfitPanelSheet() {
   )
 }
 
-const ATTIRE_TITLE = 'Your attire'
+/** v6 reaches this from its Complete the Look button, so it carries that name. */
+const ATTIRE_TITLE = VERSION === 6 ? 'Complete the Look' : 'Your attire'
 const ATTIRE_SUBTITLE = 'Anything you leave empty stays as your base'
 
 function AttireNotice() {
@@ -328,13 +393,31 @@ function AttireNotice() {
   )
 }
 
-/** "View Attire" on the phone: v2's Complete the Look grid as a sheet over the panel. */
+/**
+ * v5 starts here and v6 completes the look here, so their View Attire also takes
+ * a product link and shows credits — v4 has those on its Pick an outfit panel.
+ */
+const ATTIRE_IS_BASE = VERSION >= 5
+
+/**
+ * "View Attire" on the phone: v2's Complete the Look grid as a sheet. In v4 it
+ * stacks over the panel sheet (back returns there); in v5 it is the first sheet.
+ */
 export function AttireSheet() {
+  const stacked = useTryItOnStore((s) => s.sheets.length > 1)
   return (
     <div className="flex h-[90dvh] flex-col">
-      <SheetHeader title={ATTIRE_TITLE} subtitle={ATTIRE_SUBTITLE} />
-      <div className="scrollbar-hide mt-5 min-h-0 flex-1 overflow-y-auto">
-        <AttireGrid layout="v4" />
+      <SheetHeader title={ATTIRE_TITLE} subtitle={ATTIRE_SUBTITLE} back={stacked} credits={!stacked} />
+      {/* mt/pt split: the link field's ring sits just above it, and the scroll area clips at its top. */}
+      <div className="scrollbar-hide mt-3 min-h-0 flex-1 overflow-y-auto pt-2">
+        {ATTIRE_IS_BASE && (
+          <div className="px-6 pb-5">
+            <PanelLink inSheet />
+          </div>
+        )}
+        <div className="px-6 pb-6">
+          <AttireGrid layout="v4" />
+        </div>
       </div>
       <SheetFooter shadow>
         <AttireNotice />
@@ -344,20 +427,50 @@ export function AttireSheet() {
   )
 }
 
-/** "View Attire" on web: the same grid takes over the side panel; the page header's back returns to it. */
-export function AttirePanel() {
+/**
+ * "View Attire" on web: the same grid in the side panel. v4 swaps it in from the
+ * panel (the page header's back returns); v5 shows it from the start, with credits.
+ */
+export function AttirePanel({ onClose }: { onClose?: () => void }) {
+  const credits = useTryItOnStore((s) => s.credits)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/* As v6's sheet: credits and ✕ on a row of their own, top right, like the other sheets. */}
+      {onClose && (
+        <div className="flex h-6 shrink-0 items-center justify-end gap-2 pb-4 pt-6" style={{ boxSizing: 'content-box' }}>
+          <Credits value={credits} />
+          <span className="h-4 w-px" style={{ background: C.grey12 }} aria-hidden />
+          <button type="button" onClick={onClose} aria-label="Close" className="-mr-1 p-1 transition-opacity hover:opacity-70">
+            <X size={24} strokeWidth={1.5} color={C.text} />
+          </button>
+        </div>
+      )}
       <div className="flex shrink-0 flex-col gap-3 pb-5">
-        <h1 className="text-[26px] leading-7 tracking-[-0.312px]" style={{ fontWeight: 450, color: C.text }}>
-          {ATTIRE_TITLE}
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-[26px] leading-7 tracking-[-0.312px]" style={{ fontWeight: 450, color: C.text }}>
+            {ATTIRE_TITLE}
+          </h1>
+          {ATTIRE_IS_BASE && !onClose && (
+            <div className="-mr-1.5">
+              <Credits value={credits} />
+            </div>
+          )}
+        </div>
         <p className="text-[16px] leading-[18px]" style={{ fontWeight: 420, color: C.secondary }}>
           {ATTIRE_SUBTITLE}
         </p>
       </div>
-      <div className="scrollbar-hide -mr-6 min-h-0 flex-1 overflow-y-auto">
-        <AttireGrid layout="v4" />
+      {/* Negative margin + padding: the link field's ring and shadow sit just outside it, and the
+          scroll area clips at its edges; this leaves them room without moving or narrowing anything. */}
+      <div className="scrollbar-hide -ml-4 -mr-6 -mt-2 min-h-0 flex-1 overflow-y-auto pl-4 pt-2">
+        {ATTIRE_IS_BASE && (
+          <div className="pb-5 pr-6">
+            <PanelLink inSheet={false} />
+          </div>
+        )}
+        <div className="pb-6 pr-6">
+          <AttireGrid layout="v4" />
+        </div>
       </div>
       <div className="relative -mx-6 flex shrink-0 flex-col gap-3 bg-white px-6 pb-4 pt-3" style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))' }}>
         <AttireNotice />

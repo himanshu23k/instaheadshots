@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, ChevronRight, Lock, LockOpen, Sparkles, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { VERSION, currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
 import { SLOT_LABEL, type Garment, type Slot } from './try-it-on-data'
 import { Credits, CreditsIcon, GarmentImage, Notice } from './ui'
@@ -198,13 +199,13 @@ function Tile({ slot, empty, index, lines }: { slot: Slot; empty: string; index:
   // v4's attire grid can itself be a sheet; the next step then stacks on it so back returns here.
   // v4 picks from its collection, opened on this tile's tab; v2 has a sheet per slot.
   const open = () =>
-    (inSheet ? pushSheet : openSheet)(VERSION === 4 ? { name: 'builder', tab: slot } : { name: 'slot', slot })
+    (inSheet ? pushSheet : openSheet)(VERSION >= 4 ? { name: 'builder', tab: slot } : { name: 'slot', slot })
 
   const label = piece ? `Change ${piece.name}` : covered ? `Swap your dress for a ${SLOT_LABEL[slot].toLowerCase()}` : empty
   return (
     // The whole tile opens the slot; lock and ✕ sit above that button rather than inside it.
     <div
-      className="relative flex aspect-[46/54] flex-col p-4"
+      className={cn('relative flex aspect-[46/54] flex-col', lines && 'p-4')}
       style={lines ? { borderBottom: `1px solid ${LINE}`, borderRight: index % 2 === 0 ? `1px solid ${LINE}` : 'none' } : undefined}
     >
       <button
@@ -252,7 +253,7 @@ function AccessoriesTile({ empty, index, lines }: { empty: string; index: number
 
   return (
     <div
-      className="relative flex aspect-[46/54] flex-col p-4"
+      className={cn('relative flex aspect-[46/54] flex-col', lines && 'p-4')}
       style={lines ? { borderBottom: `1px solid ${LINE}`, borderRight: index % 2 === 0 ? `1px solid ${LINE}` : 'none' } : undefined}
     >
       <button
@@ -303,8 +304,8 @@ export function AttireGrid({ layout = 'v2' }: { layout?: 'v2' | 'v4' }) {
   const tiles = layout === 'v4' ? V4_TILES : TILES
   const lines = layout === 'v2'
   return (
-    // v2's Create Look rules its tiles into a grid; v4's View Attire leaves them unruled, spaced by their padding.
-    <div className="grid grid-cols-2" style={lines ? { borderTop: `1px solid ${LINE}` } : undefined}>
+    // v2's Create Look rules its tiles into a padded grid; v4/v5's View Attire just spaces them 16px apart.
+    <div className={cn('grid grid-cols-2', !lines && 'gap-4')} style={lines ? { borderTop: `1px solid ${LINE}` } : undefined}>
       {tiles.map((t, i) =>
         t.slot === 'accessories' ? (
           <AccessoriesTile key={t.slot} empty={t.empty} index={i} lines={lines} />

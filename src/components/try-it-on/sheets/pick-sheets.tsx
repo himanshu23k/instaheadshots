@@ -112,7 +112,8 @@ export function BringYourOwn({ slot }: { slot?: Slot }) {
           icon={<FolderIcon />}
           title="Browse our collection"
           subtitle="Curated pieces for work, weekends and events"
-          onClick={() => pushSheet({ name: 'collection', slot })}
+          // v6 browses in v4's collection sheet, tabbed by asset type; earlier versions in v1's list.
+          onClick={() => pushSheet(VERSION === 6 ? { name: 'builder', tab: slot } : { name: 'collection', slot })}
         />
       </div>
     </div>
@@ -451,7 +452,7 @@ export function DropZone({
 }
 
 /** v4 seeds its own photos (Figma 3380:166586 "Uploads/Product Links"). */
-const SAMPLES = VERSION === 4 ? V4_UPLOAD_SAMPLES : UPLOAD_SAMPLES
+const SAMPLES = VERSION >= 4 ? V4_UPLOAD_SAMPLES : UPLOAD_SAMPLES
 
 export function UploadSheet({ route }: { route: Route<'upload'> }) {
   const replaceSheet = useTryItOnStore((s) => s.replaceSheet)

@@ -139,11 +139,24 @@ export const USER_TYPE: 'new' | 'repeat' = params.get('user_type') === 'repeat' 
  * tray of slots starts a look and completes it. `?version=4` is the desktop
  * layout (Figma p3OWFjk2XX1hlhkspVe7qQ 3390:229694): Pick an outfit beside the
  * photo, with "Complete the look" as one wide sheet tabbed by asset type.
- * Other versions fall back to 1.
+ * `?version=5` is v4 with View Attire as the starting panel — there's no Pick
+ * an outfit step. `?version=6` starts on v1's Pick an outfit in the side panel,
+ * with Complete the Look under the photo opening v5's attire panel. Other
+ * versions fall back to 1.
  */
 const versionParam = params.get('version')
-export const VERSION: 1 | 2 | 3 | 4 =
-  versionParam === '2' ? 2 : versionParam === '3' ? 3 : versionParam === '4' ? 4 : 1
+export const VERSION: 1 | 2 | 3 | 4 | 5 | 6 =
+  versionParam === '2'
+    ? 2
+    : versionParam === '3'
+      ? 3
+      : versionParam === '4'
+        ? 4
+        : versionParam === '5'
+          ? 5
+          : versionParam === '6'
+            ? 6
+            : 1
 
 /** v3 outfit sheet tabs: For you, then one per slot. */
 export type OutfitTab = 'for-you' | Slot
@@ -352,7 +365,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
   // v4 starts it on the page, whose Top Picks are the first step.
   createNewLook: () =>
     set((st) =>
-      VERSION === 4
+      VERSION >= 4
         ? { view: { name: 'home', panel: 0 }, draft: toDraft(st.base.pieces), builderNotice: null, sheets: [] }
         : VERSION === 3
           ? {
@@ -410,7 +423,7 @@ export const useTryItOnStore = create<TryItOnState>((set, get) => ({
       if (draft.locked[slot] || (dressLocked && slot !== 'outerwear')) continue
       const current = get().draft?.pieces[slot]?.id
       // v4 restyles from its own catalog (Figma 3380:166586), v1–v3 from the suggestions.
-      const pool = VERSION === 4 ? V4_GARMENTS.filter((g) => g.slot === slot).map((g) => g.id) : SLOT_SUGGESTIONS[slot]
+      const pool = VERSION >= 4 ? V4_GARMENTS.filter((g) => g.slot === slot).map((g) => g.id) : SLOT_SUGGESTIONS[slot]
       const options = pool.filter((id) => id !== current)
       const pick = garmentById(options[Math.floor(Math.random() * options.length)])
       if (pick) {

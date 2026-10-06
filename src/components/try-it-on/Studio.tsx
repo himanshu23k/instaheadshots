@@ -262,7 +262,8 @@ export function LookCard({
             </>
           )}
 
-          {!isBase && startFresh && (
+          {/* v6 has no Start A Fresh on the photo; the rail's base thumbnail starts afresh. */}
+          {!isBase && startFresh && VERSION !== 6 && (
             <button
               type="button"
               onClick={createNewLook}
@@ -728,7 +729,7 @@ function BrowseCarousel({ look, startFresh }: { look: Look; startFresh: boolean 
     if (dir === -1 && prev) return setView({ name: 'look', id: prev.id, fromGrid: true })
     // Before the first trial is the base. v4's base is a fresh outfit; elsewhere it sits
     // under whatever the builder holds.
-    if (VERSION === 4) createNewLook()
+    if (VERSION >= 4) createNewLook()
     else setView({ name: 'home', panel: 0 })
   }
 

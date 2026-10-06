@@ -4,6 +4,7 @@ import { ArrowLeft, X } from 'lucide-react'
 import { VERSION, useTryItOnStore, type SheetRoute } from '@/store/try-it-on-store'
 import { Credits } from './ui'
 import { C, FONT } from './tokens'
+import { useSideSheet } from './use-side-sheet'
 import { CollectionSheet, LinkSheet, PickSheet, TrySheet, UploadPiecesSheet, UploadSheet } from './sheets/pick-sheets'
 import { BuilderSheet, FoundSheet, NotFoundSheet, SlotSheet, SwapSheet } from './sheets/builder-sheets'
 import { OutfitSheet } from './sheets/outfit-sheet'
@@ -29,7 +30,7 @@ function SheetBody({ route }: { route: SheetRoute }) {
       return <CollectionSheet route={route} />
     case 'builder':
       // v3 picks and completes in one outfit sheet, v4 in the wide asset-type sheet; v1 in the slot list.
-      if (VERSION === 4) return <CompleteLookSheet route={route} />
+      if (VERSION >= 4) return <CompleteLookSheet route={route} />
       return VERSION === 3 ? <OutfitSheet route={route} /> : <BuilderSheet />
     case 'slot':
       return <SlotSheet route={route} />
@@ -62,10 +63,12 @@ function SheetBody({ route }: { route: SheetRoute }) {
 export function SheetHost() {
   const sheets = useTryItOnStore((s) => s.sheets)
   const closeSheets = useTryItOnStore((s) => s.closeSheets)
-  const top = sheets.at(-1)
+  // v6 on web shows a link or upload flow in its side sheet (SideSheetSteps), so the overlay stays down.
+  const side = useSideSheet()
+  const top = side ? undefined : sheets.at(-1)
   const depth = sheets.length
   // v4's Complete the look is Figma's 896 desktop sheet; every other step keeps the phone width.
-  const wide = VERSION === 4 && top?.name === 'builder'
+  const wide = VERSION >= 4 && top?.name === 'builder'
   const drag = useDragControls()
 
   // Measure the active step so the panel can animate to its height.
@@ -111,7 +114,7 @@ export function SheetHost() {
               below the web breakpoint, so its sheets go edge to edge there. */}
           <div
             className={`absolute inset-x-0 bottom-0 mx-auto flex w-full justify-center ${
-              wide ? 'web:max-w-[896px]' : VERSION === 4 ? 'web:max-w-[440px]' : 'max-w-[440px]'
+              wide ? 'web:max-w-[896px]' : VERSION >= 4 ? 'web:max-w-[440px]' : 'max-w-[440px]'
             }`}
           >
             <motion.div
@@ -164,6 +167,46 @@ export function SheetHost() {
         </motion.div>
       )}
     </AnimatePresence>
+  )
+}
+
+/**
+ * v6 on web: the steps of a link or upload flow, inside its side sheet rather
+ * than the centred one. Same steps and stack (back pops, ✕ closes); each step
+ * slides in as it would in the sheet.
+ */
+export function SideSheetSteps() {
+  const sheets = useTryItOnStore((s) => s.sheets)
+  const top = sheets.at(-1)
+  const depth = sheets.length
+  const [prevDepth, setPrevDepth] = useState(depth)
+  const [direction, setDirection] = useState(1)
+  if (prevDepth !== depth) {
+    setPrevDepth(depth)
+    setDirection(depth > prevDepth ? 1 : -1)
+  }
+  if (!top) return null
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={FONT}>
+      <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+        <motion.div
+          key={`${depth}-${top.name}`}
+          custom={direction}
+          variants={{
+            enter: (d: number) => ({ opacity: 0, x: d * 24 }),
+            center: { opacity: 1, x: 0 },
+            exit: (d: number) => ({ opacity: 0, x: d * -24 }),
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <SheetBody route={top} />
+        </motion.div>
+      </AnimatePresence>
+    </div>
   )
 }
 

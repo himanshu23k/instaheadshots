@@ -19,7 +19,9 @@ import { FONT } from './tokens'
  * flow (1: Pick an outfit + slot-list Complete the Look, 2: Doji-style Create
  * Look page, 3: one outfit sheet that both starts and completes the look,
  * 4: the desktop layout — Pick an outfit beside the photo, then one wide
- * Complete the look sheet tabbed by asset type);
+ * Complete the look sheet tabbed by asset type, 5: v4 starting on View Attire,
+ * with no Pick an outfit step, 6: v1's Pick an outfit in the side panel, with
+ * Complete the Look under the photo opening v5's attire panel);
  * `?user_type=new|repeat` picks a
  * first-time user (intro, no history) or a returning one (16 past trials, no
  * intro); `?splash=0` skips the intro,
@@ -37,8 +39,8 @@ export function TryItOnPage() {
   // Each visit starts from a fresh base.
   useEffect(() => reset, [reset])
 
-  // v4 is the desktop layout, so the studio fills the window rather than the phone column.
-  if (VERSION === 4 && stage === 'studio') {
+  // v4–v6 are the desktop layout, so the studio fills the window rather than the phone column.
+  if (VERSION >= 4 && stage === 'studio') {
     return (
       <>
         <StudioV4 onBack={() => setStage('splash')} />
