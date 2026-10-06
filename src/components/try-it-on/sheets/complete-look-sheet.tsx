@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { TriangleAlert } from 'lucide-react'
 import { VERSION, useTryItOnStore, type Look, type SheetRoute } from '@/store/try-it-on-store'
 import {
   V4_GARMENTS,
@@ -194,6 +195,12 @@ export function CompleteLookSheet({ route }: { route: Route }) {
   if (!draft) return null
 
   const pieces = Object.values(draft.pieces) as Garment[]
+  // A dress takes the place of a top and bottoms, so on the Dress tab say what picking one would remove.
+  const covered = [draft.pieces.top, draft.pieces.bottom].filter((p): p is Garment => !!p)
+  const dressWarning =
+    tab === 'dress' && covered.length
+      ? `Selecting a dress removes your ${covered.map((p) => p.name).join(' and ')}.`
+      : null
   const saved = looks.filter((l) => l.favorite)
   const def = tab === 'saves' ? null : LOOK_TABS.find((t) => t.id === tab)!
   const grid = def ? V4_GARMENTS.filter((g) => def.slots.includes(g.slot)) : []
@@ -222,6 +229,23 @@ export function CompleteLookSheet({ route }: { route: Route }) {
           <TabPill key={t.id} tab={t.id} label={t.label} active={tab === t.id} onSelect={() => setTab(t.id)} />
         ))}
       </div>
+      <AnimatePresence initial={false}>
+        {dressWarning && (
+          <motion.p
+            key="dress-warning"
+            role="status"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="flex shrink-0 items-start gap-2 overflow-hidden px-6 pt-3 text-[14px] leading-[18px]"
+            style={{ color: '#8A5A00', fontWeight: 420 }}
+          >
+            <TriangleAlert size={16} strokeWidth={1.8} className="mt-px shrink-0" aria-hidden />
+            {dressWarning}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       <div role="tabpanel" className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-6 web:pt-10">
         <AnimatePresence mode="wait" initial={false}>

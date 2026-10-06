@@ -26,12 +26,15 @@ let startedAsSide = false
 useTryItOnStore.subscribe((s, prev) => {
   if (!s.sheets.length) startedAsSide = false
   else if (!prev.sheets.length) startedAsSide = SIDE_ROOTS.has(s.sheets[0].name)
+  // Browse our collection is the wide sheet, but what it hands on to (Try this on) moves beside the photo.
+  else if (prev.sheets[0]?.name === 'builder' && s.sheets[0].name === 'try') startedAsSide = true
 })
 
 /**
  * v6 on web opens a pasted link or an upload as a sheet over the side panel,
  * like its Complete the Look sheet, rather than centred over the page — every
- * step of it. The same steps opened from inside the collection sheet stay there.
+ * step of it — and so is the Try this on that Browse our collection hands on to.
+ * Steps opened from inside the collection sheet itself stay there.
  */
 export function useSideSheet(): boolean {
   const isWeb = useIsWeb()
