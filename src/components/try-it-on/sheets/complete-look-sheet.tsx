@@ -207,7 +207,7 @@ export function CompleteLookSheet({ route }: { route: Route }) {
 
   // Keep the tab on the route so coming back from the upload steps lands here again.
   const upload = (slot: Slot) => {
-    replaceSheet({ name: 'builder', tab: slot })
+    replaceSheet({ name: 'builder', tab: slot, fromPick: route.fromPick })
     pushSheet({ name: 'upload', slot, toBuilder: true })
   }
 
@@ -280,9 +280,10 @@ export function CompleteLookSheet({ route }: { route: Route }) {
         </div>
         {/* Back to the panel, whose Create renders the look — on the phone the panel is the sheet underneath. */}
         <PrimaryButton
-          // v6 came here from v1's Pick an outfit, which has no Create of its own: carry on to Try this on.
+          // v6 opened from Pick an outfit, which has no Try on of its own: carry on to Try this on.
+          // From a Complete the Look tile it just goes back, where Try on sits beside Style Me.
           onClick={
-            VERSION === 6 && pieces.length
+            VERSION === 6 && route.fromPick && pieces.length
               ? () => replaceSheet({ name: 'try', garments: pieces })
               : stacked
                 ? popSheet

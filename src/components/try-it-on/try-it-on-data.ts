@@ -44,6 +44,8 @@ export type Garment = {
   renderAs?: string
   /** A full studio photo rather than a cut-out: it covers its tile instead of sitting inside it. */
   fill?: boolean
+  /** A whole outfit (an uploaded reference photo): the pre-rendered pieces it stands in for. */
+  renderPieces?: string[]
 }
 
 // ── The two pieces the base photo is wearing ─────────────────────────────────
@@ -310,6 +312,24 @@ const photoItem = (
 ): FoundItem => ({ id, name, slot, image: '', look: 'product', source: 'upload', renderAs, found })
 
 /** Real-life photos from Figma 3380:166586 "Uploads/Product Links"; boxes are percent of the photo. */
+/**
+ * v6: an uploaded photo taken as one whole outfit, not split into pieces. It
+ * fills the dress slot (so it covers top and bottoms) and renders as the
+ * closest pre-made look to everything in the photo.
+ */
+export function outfitFromPhoto(sample: UploadSample, image: string): Garment {
+  return {
+    id: `outfit-${sample.id}`,
+    name: 'Outfit from your photo',
+    slot: 'dress',
+    image,
+    look: 'product',
+    source: 'upload',
+    fill: true,
+    renderPieces: sample.items.map((it) => it.renderAs).filter((id): id is string => !!id),
+  }
+}
+
 export const V4_UPLOAD_SAMPLES: UploadSample[] = [
   {
     id: 'mirror-overshirt',
@@ -474,7 +494,7 @@ export const RENDERS: Render[] = [
  * sharing the most pieces, preferring the framing the outfit implies.
  */
 export function resolveRender(pieces: Garment[]): Render {
-  const ids = pieces.map((p) => p.renderAs ?? p.id)
+  const ids = pieces.flatMap((p) => p.renderPieces ?? [p.renderAs ?? p.id])
   const wantsFull = pieces.some((p) => p.slot === 'dress' || (p.slot === 'bottom' && p.source !== 'base'))
   const score = (r: Render) => {
     const shared = r.pieces.filter((id) => ids.includes(id)).length

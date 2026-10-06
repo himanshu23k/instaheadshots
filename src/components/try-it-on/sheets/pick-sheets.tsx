@@ -4,6 +4,7 @@ import { Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { VERSION, currentLook, useTryItOnStore, withPiece, type SheetRoute } from '@/store/try-it-on-store'
 import {
+  outfitFromPhoto,
   COLLECTION,
   COLLECTION_FILTERS,
   FIRST_SUGGESTIONS,
@@ -113,7 +114,7 @@ export function BringYourOwn({ slot }: { slot?: Slot }) {
           title="Browse our collection"
           subtitle="Curated pieces for work, weekends and events"
           // v6 browses in v4's collection sheet, tabbed by asset type; earlier versions in v1's list.
-          onClick={() => pushSheet(VERSION === 6 ? { name: 'builder', tab: slot } : { name: 'collection', slot })}
+          onClick={() => pushSheet(VERSION === 6 ? { name: 'builder', tab: slot, fromPick: true } : { name: 'collection', slot })}
         />
       </div>
     </div>
@@ -129,7 +130,9 @@ export function TrySheet({ route }: { route: Route<'try'> }) {
   const { garments, product } = route
   const [photo, setPhoto] = useState(product?.photos[0].id)
   const [hintOpen, setHintOpen] = useState(true)
-  const hint = framingHint(look.pieces, garments)
+  const hint = route.wholeOutfit
+    ? 'Replaces your whole outfit with the one in your photo. This photo will be full body.'
+    : framingHint(look.pieces, garments)
 
   const shown = product
     ? {
@@ -141,8 +144,10 @@ export function TrySheet({ route }: { route: Route<'try'> }) {
     : garments[0]
   const caption = product
     ? product.title
-    : route.fromUpload
-      ? 'We found this outfit from upload'
+    : route.wholeOutfit
+      ? 'The outfit from your photo'
+      : route.fromUpload
+        ? 'We found this outfit from upload'
       : garments.map((g) => g.name).join(' + ')
 
   return (
@@ -220,7 +225,8 @@ export function TrySheet({ route }: { route: Route<'try'> }) {
         </AnimatePresence>
         <PrimaryButton
           cost={1}
-          onClick={() => tryOn(garments.reduce((pieces, g) => withPiece(pieces, g), look.pieces))}
+          // A whole outfit replaces everything; single pieces go on top of the current look.
+          onClick={() => tryOn(route.wholeOutfit ? garments : garments.reduce((pieces, g) => withPiece(pieces, g), look.pieces))}
         >
           Try It On
         </PrimaryButton>
@@ -474,6 +480,9 @@ export function UploadSheet({ route }: { route: Route<'upload'> }) {
       )
     } else if (route.toBuilder) {
       replaceSheet({ name: 'found', image, items, title: 'Items found' })
+    } else if (VERSION === 6) {
+      // v6's Pick an outfit takes the photo as the whole outfit — nothing is picked out of it.
+      replaceSheet({ name: 'try', garments: [outfitFromPhoto(sample, image)], fromUpload: true, wholeOutfit: true })
     } else if (items.length > 1) {
       replaceSheet({ name: 'upload-pieces', sample, image })
     } else {

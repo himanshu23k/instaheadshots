@@ -27,13 +27,14 @@ export type Look = { id: string; render: Render; pieces: Garment[]; favorite: bo
  */
 export type SheetRoute =
   | { name: 'pick' }
-  | { name: 'try'; garments: Garment[]; product?: LinkProduct; fromUpload?: boolean }
+  /** `wholeOutfit`: v6's uploaded reference photo, which replaces the entire outfit. */
+  | { name: 'try'; garments: Garment[]; product?: LinkProduct; fromUpload?: boolean; wholeOutfit?: boolean }
   | { name: 'link'; slot?: Slot; url?: string; toBuilder?: boolean }
   | { name: 'upload'; slot?: Slot; toBuilder?: boolean }
   | { name: 'upload-pieces'; sample: UploadSample; image: string }
   | { name: 'collection'; slot?: Slot }
   /** v3 opens it on a tab (a slot, or For you); v1 ignores it. */
-  | { name: 'builder'; tab?: OutfitTab }
+  | { name: 'builder'; tab?: OutfitTab; fromPick?: boolean }
   | { name: 'slot'; slot: Slot }
   | { name: 'found'; slot?: Slot; image: string; items: FoundItem[]; title: string }
   | { name: 'not-found'; slot: Slot; image: string }
