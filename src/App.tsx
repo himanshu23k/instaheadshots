@@ -21,6 +21,7 @@ import { CreateProfilePage } from '@/components/create-profile/CreateProfilePage
 import { HairstylistPage } from '@/components/hairstylist/HairstylistPage'
 import { HairstyleLandingPage } from '@/components/hairstyle-landing/HairstyleLandingPage'
 import { TryItOnPage } from '@/components/try-it-on/TryItOnPage'
+import { CreatorFlow3TestPage } from '@/components/creator-flow-3test/CreatorFlow3TestPage'
 import type { StepId } from '@/types'
 
 const STEP_COMPONENTS: Record<StepId, React.ComponentType> = {
@@ -83,6 +84,7 @@ function AppRoutes() {
           <Route path="/hairstylist" element={<HairstylistPage />} />
           <Route path="/hairstyle-landing" element={<HairstyleLandingPage />} />
           <Route path="/try-it-on" element={<TryItOnPage />} />
+          <Route path="/creator-flow-3test" element={<CreatorFlow3TestPage />} />
           <Route path="/noor/upsell" element={<UpsellPage />} />
           <Route path="/devansh/referral-pre" element={<ReferralPre />} />
           {/* Prevent /payment-plans from rendering inside the scaled background */}
