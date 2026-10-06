@@ -32,6 +32,8 @@ const byId = (id: string) => garmentById(id) as Garment
 
 export function PickSheet() {
   const pushSheet = useTryItOnStore((s) => s.pushSheet)
+  const look = useTryItOnStore(currentLook)
+  const tryOn = useTryItOnStore((s) => s.tryOn)
   const [selected, setSelected] = useState<string | null>(null)
   const suggestions = FIRST_SUGGESTIONS.map(byId)
 
@@ -47,8 +49,20 @@ export function PickSheet() {
         />
         <BringYourOwn />
       </SheetScroll>
+      {/* v6: selecting a suggestion is the confirmation — Try It On renders it, no Try this on sheet. */}
+      {VERSION === 6 && (
+        <SheetFooter shadow>
+          <PrimaryButton
+            disabled={!selected}
+            cost={1}
+            onClick={() => selected && tryOn(withPiece(look.pieces, byId(selected)))}
+          >
+            Try It On
+          </PrimaryButton>
+        </SheetFooter>
+      )}
       <AnimatePresence initial={false}>
-        {selected && (
+        {VERSION !== 6 && selected && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

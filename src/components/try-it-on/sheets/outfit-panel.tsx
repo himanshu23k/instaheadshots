@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { X } from 'lucide-react'
-import { VERSION, currentLook, useTryItOnStore, withBase } from '@/store/try-it-on-store'
+import { VERSION, currentLook, useTryItOnStore, withBase, withPiece } from '@/store/try-it-on-store'
 import {
   FIRST_SUGGESTIONS,
   LOOK_TABS,
@@ -301,7 +301,8 @@ export function PanelDock({ onViewAttire }: { onViewAttire: () => void }) {
  */
 export function PickPanel() {
   const credits = useTryItOnStore((s) => s.credits)
-  const pushSheet = useTryItOnStore((s) => s.pushSheet)
+  const look = useTryItOnStore(currentLook)
+  const tryOn = useTryItOnStore((s) => s.tryOn)
   const [selected, setSelected] = useState<string | null>(null)
 
   return (
@@ -336,20 +337,16 @@ export function PickPanel() {
           <BringYourOwn />
         </div>
       </div>
-      <AnimatePresence initial={false}>
-        {selected && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="relative -mx-6 shrink-0 bg-white px-6 pb-4 pt-3"
-            style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))' }}
-          >
-            <PrimaryButton onClick={() => pushSheet({ name: 'try', garments: [byId(selected)] })}>Continue</PrimaryButton>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Selecting a suggestion is the confirmation: Try It On renders it straight away, no sheet. */}
+      <div className="relative -mx-6 shrink-0 bg-white px-6 pb-4 pt-3" style={{ filter: 'drop-shadow(0px -2px 6px rgba(0,0,0,0.06))' }}>
+        <PrimaryButton
+          disabled={!selected}
+          cost={1}
+          onClick={() => selected && tryOn(withPiece(look.pieces, byId(selected)))}
+        >
+          Try It On
+        </PrimaryButton>
+      </div>
     </div>
   )
 }
