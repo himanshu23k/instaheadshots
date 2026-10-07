@@ -10,11 +10,16 @@
  * Below 1280px it is the mobile frame: one column with the CTAs docked at the
  * bottom. At 1280px and up the form card (QR + upload) sits left and the
  * photos with their meter sit right.
+ *
+ * ?version=2 swaps in CreatorFlow3TestV2, the "Upload your photos" redesign.
  */
 import { useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { PrimaryCta } from '@/components/create-profile/CreateProfileFields'
+import { CreatorFlow3TestV2 } from './CreatorFlow3TestV2'
 import {
   PhotoGrid,
+  QrUploadCard,
   RequirementsLink,
   SecondaryCta,
   SecureNote,
@@ -26,9 +31,14 @@ import { K, countLabel } from './tokens'
 import { MAX_PHOTOS, MIN_PHOTOS, VARIETY_PHOTOS, usePhotos } from './use-photos'
 
 export function CreatorFlow3TestPage() {
+  const [params] = useSearchParams()
+  const version = params.get('version')
+  return version === '2' || version === 'v2' ? <CreatorFlow3TestV2 /> : <CreatorFlow3TestV1 />
+}
+
+function CreatorFlow3TestV1() {
   const { photos, addFiles, removePhoto, toast, dismissToast } = usePhotos()
   const [creating, setCreating] = useState(false)
-  const [dragging, setDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const n = photos.length
@@ -139,47 +149,7 @@ export function CreatorFlow3TestPage() {
                 <RequirementsLink />
               </div>
 
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setDragging(true)
-                }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  setDragging(false)
-                  addFiles(e.dataTransfer.files)
-                }}
-                className="flex justify-center rounded-2xl border bg-white p-6 transition-colors"
-                style={{ borderColor: dragging ? K.text : K.stroke, background: dragging ? '#FAFAFA' : '#fff' }}
-              >
-                <div className="flex w-[440px] flex-col items-center gap-8">
-                  <div className="flex w-full flex-col items-center gap-6">
-                    <div className="flex w-full flex-col items-center gap-2 text-center">
-                      <p className="text-[22px] leading-6 tracking-[-0.22px]" style={{ fontWeight: 450, color: K.text }}>
-                        Upload from your phone
-                      </p>
-                      <p className="text-[16px] leading-[18px]" style={{ color: K.secondary }}>
-                        Scan QR, upload from your phone gallery
-                      </p>
-                    </div>
-                    <img src="/creator-flow-3test/qr.svg" alt="QR code to upload from your phone" width={110} height={110} />
-                  </div>
-                  <div className="flex items-center gap-2" aria-hidden>
-                    <span className="h-px w-[120px]" style={{ background: K.stroke }} />
-                    <span className="text-[16px] leading-[18px]" style={{ color: K.secondary }}>
-                      Or
-                    </span>
-                    <span className="h-px w-[120px]" style={{ background: K.stroke }} />
-                  </div>
-                  <PrimaryCta onClick={pick} disabled={full || creating}>
-                    <span className="flex items-center gap-2">
-                      <img src="/creator-flow-3test/upload.svg" alt="" width={14} height={13.5} />
-                      {full ? 'All 15 photos added' : 'Upload photos from this device'}
-                    </span>
-                  </PrimaryCta>
-                </div>
-              </div>
+              <QrUploadCard onPick={pick} onFiles={addFiles} disabled={full || creating} label={full ? 'All 15 photos added' : undefined} />
             </div>
 
             <div className="flex items-center justify-between gap-4">

@@ -18,8 +18,8 @@ export type Toast = { id: number; message: string }
 const fileKey = (f: File) => `${f.name}:${f.size}:${f.lastModified}`
 
 /** ?photos=N starts the page with N mock photos, to review each state of the meter. */
-function demoPhotos(): Photo[] {
-  const n = Math.min(MAX_PHOTOS, Math.max(0, Number(new URLSearchParams(window.location.search).get('photos')) || 0))
+function demoPhotos(max: number): Photo[] {
+  const n = Math.min(max, Math.max(0, Number(new URLSearchParams(window.location.search).get('photos')) || 0))
   return Array.from({ length: n }, (_, i) => {
     const url = `/mock/faces/face-${String((i % 12) + 1).padStart(2, '0')}.jpg`
     return { id: `demo-${i}`, key: `demo-${i}`, url, uploading: false }
@@ -30,8 +30,8 @@ function demoPhotos(): Photo[] {
  * The upload screen's photos, held locally: there is no backend yet, so each
  * file becomes an object URL and "uploads" for a beat before it settles.
  */
-export function usePhotos() {
-  const [photos, setPhotos] = useState<Photo[]>(demoPhotos)
+export function usePhotos(max = MAX_PHOTOS) {
+  const [photos, setPhotos] = useState<Photo[]>(() => demoPhotos(max))
   const [toast, setToast] = useState<Toast | null>(null)
   const photosRef = useRef(photos)
   const timers = useRef<number[]>([])
@@ -71,11 +71,11 @@ export function usePhotos() {
         fresh.push({ id: crypto.randomUUID(), key, url: URL.createObjectURL(f), uploading: true })
       }
 
-      const room = MAX_PHOTOS - current.length
+      const room = max - current.length
       const kept = fresh.slice(0, room)
       fresh.slice(room).forEach((p) => URL.revokeObjectURL(p.url))
 
-      if (fresh.length > room) showToast(`You can add up to ${MAX_PHOTOS} photos`)
+      if (fresh.length > room) showToast(`You can add up to ${max} photos`)
       else if (duplicate) showToast('This photo has already been uploaded')
       if (!kept.length) return
 
@@ -87,7 +87,7 @@ export function usePhotos() {
         timers.current.push(t)
       })
     },
-    [showToast],
+    [max, showToast],
   )
 
   const removePhoto = useCallback((id: string) => {

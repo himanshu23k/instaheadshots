@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, Menu, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { K, captionFor } from './tokens'
+import { PrimaryCta } from '@/components/create-profile/CreateProfileFields'
+import { K, K2, captionFor, progressMix } from './tokens'
 import { MAX_PHOTOS, MIN_PHOTOS, VARIETY_PHOTOS, type Photo, type Toast } from './use-photos'
 
 const A = '/creator-flow-3test'
@@ -34,14 +35,14 @@ export function TopBar({ className = '' }: { className?: string }) {
 }
 
 /** Old flow's underlined text button. */
-export function RequirementsLink() {
+export function RequirementsLink({ label = 'Read photo requirements' }: { label?: string }) {
   return (
     <button
       type="button"
       className="self-start border-b pb-0.5 text-[16px] leading-[18px] transition-opacity hover:opacity-70"
       style={{ fontWeight: 450, color: K.text, borderColor: K.text }}
     >
-      Read photo requirements
+      {label}
     </button>
   )
 }
@@ -86,8 +87,6 @@ const READY_AT = pct(MIN_PHOTOS)
 export function VarietyMeter({ photos, compact = false }: { photos: Photo[]; compact?: boolean }) {
   const n = photos.length
   const fill = pct(n)
-  const avatarCount = n < 6 ? 3 : n < VARIETY_PHOTOS ? 4 : 5
-  const avatars = Array.from({ length: avatarCount }, (_, i) => photos[i] ?? null)
   const label = compact ? 'text-[12px] leading-[14px]' : 'text-[13px] leading-4'
 
   return (
@@ -109,42 +108,86 @@ export function VarietyMeter({ photos, compact = false }: { photos: Photo[]; com
         </span>
       </div>
 
-      <div className="relative">
-        <span
-          aria-hidden
-          className="absolute -top-1.5 -ml-1.5 size-3 rotate-45 border-t border-l transition-[left] duration-300 ease-out"
-          style={{ left: `${Math.max(4, Math.min(96, fill))}%`, background: K.bubble, borderColor: K.bubbleStroke }}
-        />
-        <div className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5" style={{ background: K.bubble, borderColor: K.bubbleStroke }}>
-          <div className="flex shrink-0 items-center">
-            {avatars.map((p, i) => (
-              <span
-                key={p?.id ?? `ghost-${i}`}
-                className={cn('size-6 overflow-hidden rounded-full', i > 0 && '-ml-[7px]')}
-                style={p ? { boxShadow: `0 0 0 2px ${K.bubble}` } : { border: `1.5px dashed ${K.muted}`, background: '#fff' }}
-              >
-                {p && <img src={p.url} alt="" className="size-full object-cover" />}
-              </span>
-            ))}
-          </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={captionFor(n)}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18 }}
-              aria-live="polite"
-              className={compact ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-[18px]'}
-              style={{ fontWeight: 450, color: K.variety }}
-            >
-              {captionFor(n)}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-      </div>
+      <ProgressCaption photos={photos} compact={compact} />
     </div>
   )
+}
+
+/**
+ * The reinforcement under a meter: the user's own photos as avatars (dashed
+ * ghosts until the first 3 are in) and a line that changes as they add more.
+ * Its arrow points at the fill. Bump `shake` to draw the eye to it.
+ */
+export function ProgressCaption({
+  photos,
+  compact = false,
+  shake = 0,
+  caption = captionFor(photos.length),
+  tone = 'quiet',
+}: {
+  photos: Photo[]
+  compact?: boolean
+  shake?: number
+  caption?: string
+  /** `progress` is v2's: a filled box that warms from yellow to green as the count nears 10. */
+  tone?: 'quiet' | 'progress'
+}) {
+  const n = photos.length
+  const c = tone === 'progress' ? progressColors(n) : { bg: K.bubble, stroke: K.bubbleStroke, text: K.variety }
+  const fill = pct(n)
+  const avatarCount = n < 6 ? 3 : n < VARIETY_PHOTOS ? 4 : 5
+  const avatars = Array.from({ length: avatarCount }, (_, i) => photos[i] ?? null)
+
+  return (
+    <motion.div
+      key={shake}
+      className="relative"
+      animate={shake ? { x: [0, -6, 6, -4, 4, 0] } : undefined}
+      transition={{ duration: 0.4 }}
+    >
+      <span
+        aria-hidden
+        className="absolute -top-1.5 -ml-1.5 size-3 rotate-45 border-t border-l transition-[left,background-color,border-color] duration-300 ease-out"
+        style={{ left: `${Math.max(4, Math.min(96, fill))}%`, background: c.bg, borderColor: c.stroke }}
+      />
+      <div
+        className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-[background-color,border-color] duration-500"
+        style={{ background: c.bg, borderColor: c.stroke }}
+      >
+        <div className="flex shrink-0 items-center">
+          {avatars.map((p, i) => (
+            <span
+              key={p?.id ?? `ghost-${i}`}
+              className={cn('size-6 overflow-hidden rounded-full', i > 0 && '-ml-[7px]')}
+              style={p ? { boxShadow: `0 0 0 2px ${c.bg}` } : { border: `1.5px dashed ${K.muted}`, background: '#fff' }}
+            >
+              {p && <img src={p.url} alt="" className="size-full object-cover" />}
+            </span>
+          ))}
+        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={caption}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            aria-live="polite"
+            className={compact ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-[18px]'}
+            style={{ fontWeight: 450, color: c.text }}
+          >
+            {caption}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  )
+}
+
+function progressColors(n: number) {
+  const mix = progressMix(n)
+  const { bubbleStart: a, bubbleDone: b } = K2
+  return { bg: mix(a.bg, b.bg), stroke: mix(a.stroke, b.stroke), text: mix(a.text, b.text) }
 }
 
 function Stop({ at, reached, color }: { at: number; reached: boolean; color: string }) {
@@ -197,7 +240,7 @@ export function PhotoGrid({
   )
 }
 
-function FilledSlot({ photo, index, onRemove }: { photo: Photo; index: number; onRemove: () => void }) {
+export function FilledSlot({ photo, index, onRemove }: { photo: Photo; index: number; onRemove: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.92 }}
@@ -257,6 +300,66 @@ function EmptySlot({ tier, onAdd }: { tier: Tier; onAdd: () => void }) {
     >
       <Plus size={22} strokeWidth={1.5} />
     </button>
+  )
+}
+
+// ── QR upload card (Figma desktop 385:3833) ──────────────────────────────────
+
+/** "Upload from your phone": QR, "Or", then this device. Takes dropped files too. */
+export function QrUploadCard({
+  onPick,
+  onFiles,
+  disabled = false,
+  label = 'Upload photos from this device',
+}: {
+  onPick: () => void
+  onFiles: (files: FileList) => void
+  disabled?: boolean
+  label?: string
+}) {
+  const [dragging, setDragging] = useState(false)
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault()
+        setDragging(true)
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault()
+        setDragging(false)
+        onFiles(e.dataTransfer.files)
+      }}
+      className="flex justify-center rounded-2xl border p-6 transition-colors"
+      style={{ borderColor: dragging ? K.text : K.stroke, background: dragging ? '#FAFAFA' : '#fff' }}
+    >
+      <div className="flex w-[440px] flex-col items-center gap-8">
+        <div className="flex w-full flex-col items-center gap-6">
+          <div className="flex w-full flex-col items-center gap-2 text-center">
+            <p className="text-[22px] leading-6 tracking-[-0.22px]" style={{ fontWeight: 450, color: K.text }}>
+              Upload from your phone
+            </p>
+            <p className="text-[16px] leading-[18px]" style={{ color: K.secondary }}>
+              Scan QR, upload from your phone gallery
+            </p>
+          </div>
+          <img src={`${A}/qr.svg`} alt="QR code to upload from your phone" width={110} height={110} />
+        </div>
+        <div className="flex items-center gap-2" aria-hidden>
+          <span className="h-px w-[120px]" style={{ background: K.stroke }} />
+          <span className="text-[16px] leading-[18px]" style={{ color: K.secondary }}>
+            Or
+          </span>
+          <span className="h-px w-[120px]" style={{ background: K.stroke }} />
+        </div>
+        <PrimaryCta onClick={onPick} disabled={disabled}>
+          <span className="flex items-center gap-2">
+            <img src={`${A}/upload.svg`} alt="" width={14} height={13.5} />
+            {label}
+          </span>
+        </PrimaryCta>
+      </div>
+    </div>
   )
 }
 
