@@ -86,9 +86,7 @@ export function PhotoPicker({
       <button type="button" onClick={onAdd} className={cn(tileClass, 'h-[136px] w-full flex-col gap-2')} style={tileStyle}>
         <Plus size={20} strokeWidth={1.5} />
         <span className="text-[16px] leading-[18px]" style={{ fontWeight: 450 }}>
-          Add a minimum
-          <br />
-          of 3 photos
+          Click to Upload Photos
         </span>
       </button>
     )
