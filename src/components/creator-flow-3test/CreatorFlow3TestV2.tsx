@@ -40,8 +40,6 @@ function Intro({ desktop = false }: { desktop?: boolean }) {
 export function CreatorFlow3TestV2() {
   const { photos, addFiles, removePhoto, toast, dismissToast } = usePhotos(MAX)
   const [creating, setCreating] = useState(false)
-  // Bumped when Create is tapped short of 3: the caption shakes to say why.
-  const [shake, setShake] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const n = photos.length
@@ -51,9 +49,9 @@ export function CreatorFlow3TestV2() {
   const pick = () => {
     if (!full) fileRef.current?.click()
   }
+  const ready = n >= MIN_PHOTOS
   const create = () => {
-    if (n < MIN_PHOTOS) return setShake((s) => s + 1)
-    if (!uploading) setCreating(true)
+    if (ready && !uploading) setCreating(true)
   }
 
   const label = creating ? 'Creating Your Headshots…' : 'Create Your Headshots'
@@ -83,7 +81,7 @@ export function CreatorFlow3TestV2() {
             <Intro />
             <div className="flex flex-col gap-3">
               <SegmentMeter count={n} />
-              <ProgressCaption photos={photos} compact shake={shake} caption={captionV2(n)} tone="progress" />
+              <ProgressCaption photos={photos} compact caption={captionV2(n)} tone="progress" />
             </div>
             {picker('grid-cols-4 gap-2.5')}
             <Checklist />
@@ -95,7 +93,7 @@ export function CreatorFlow3TestV2() {
             <UploadToast toast={toast} onDismiss={dismissToast} className="w-full max-w-[480px]" />
           </div>
           <div className="mx-auto flex w-full max-w-[480px] flex-col">
-            <PrimaryCta onClick={create} disabled={creating} className="w-full">
+            <PrimaryCta onClick={create} disabled={!ready || uploading || creating} className="w-full">
               {label}
             </PrimaryCta>
             <SecureNote className="mt-3 justify-center" />
@@ -114,7 +112,7 @@ export function CreatorFlow3TestV2() {
             </div>
             <div className="flex items-center justify-between gap-4">
               <SecureNote />
-              <PrimaryCta onClick={create} disabled={creating}>
+              <PrimaryCta onClick={create} disabled={!ready || uploading || creating}>
                 {label}
               </PrimaryCta>
             </div>
@@ -123,7 +121,7 @@ export function CreatorFlow3TestV2() {
           <section className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto p-6">
             <div className="flex flex-col gap-3">
               <SegmentMeter count={n} />
-              <ProgressCaption photos={photos} shake={shake} caption={captionV2(n)} tone="progress" />
+              <ProgressCaption photos={photos} caption={captionV2(n)} tone="progress" />
             </div>
             {picker('grid-cols-5 gap-3')}
             <Checklist />

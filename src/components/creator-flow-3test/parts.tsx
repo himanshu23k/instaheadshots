@@ -116,18 +116,16 @@ export function VarietyMeter({ photos, compact = false }: { photos: Photo[]; com
 /**
  * The reinforcement under a meter: the user's own photos as avatars (dashed
  * ghosts until the first 3 are in) and a line that changes as they add more.
- * Its arrow points at the fill. Bump `shake` to draw the eye to it.
+ * Its arrow points at the fill.
  */
 export function ProgressCaption({
   photos,
   compact = false,
-  shake = 0,
   caption = captionFor(photos.length),
   tone = 'quiet',
 }: {
   photos: Photo[]
   compact?: boolean
-  shake?: number
   caption?: string
   /** `progress` is v2's: a filled box that warms from yellow to green as the count nears 10. */
   tone?: 'quiet' | 'progress'
@@ -139,12 +137,7 @@ export function ProgressCaption({
   const avatars = Array.from({ length: avatarCount }, (_, i) => photos[i] ?? null)
 
   return (
-    <motion.div
-      key={shake}
-      className="relative"
-      animate={shake ? { x: [0, -6, 6, -4, 4, 0] } : undefined}
-      transition={{ duration: 0.4 }}
-    >
+    <div className="relative">
       <span
         aria-hidden
         className="absolute -top-1.5 -ml-1.5 size-3 rotate-45 border-t border-l transition-[left,background-color,border-color] duration-300 ease-out"
@@ -180,7 +173,7 @@ export function ProgressCaption({
           </motion.span>
         </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
