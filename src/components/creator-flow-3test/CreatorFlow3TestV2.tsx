@@ -29,7 +29,7 @@ function Intro({ desktop = false }: { desktop?: boolean }) {
           Upload your photos
         </h1>
         <p className={desktop ? 'text-[18px] leading-5 tracking-[-0.09px]' : 'text-[16px] leading-5'} style={{ color: K.secondary }}>
-          <span style={{ fontWeight: 450, color: K.text }}>Start with just 3 photos.</span> Add up to 10 for more variety in your headshots.
+          <span style={{ fontWeight: 450, color: K.text }}>Minimum 3 photos needed.</span> Add 10 or more for variety.
         </p>
       </div>
       <RequirementsLink label="Read full photo requirements" />

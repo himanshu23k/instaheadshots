@@ -13,7 +13,7 @@
  *
  * ?version=2 swaps in CreatorFlow3TestV2, the "Upload your photos" redesign.
  */
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PrimaryCta } from '@/components/create-profile/CreateProfileFields'
 import { CreatorFlow3TestV2 } from './CreatorFlow3TestV2'
@@ -30,7 +30,22 @@ import {
 import { K, countLabel } from './tokens'
 import { MAX_PHOTOS, MIN_PHOTOS, VARIETY_PHOTOS, usePhotos } from './use-photos'
 
+/**
+ * The app's body is beige (#F0EDE8), and mobile browsers show it around this
+ * fixed page: in Safari's toolbar tint, behind the address bar, on overscroll.
+ * Paint the document white while the page is open.
+ */
+function useWhiteDocument() {
+  useEffect(() => {
+    const els = [document.documentElement, document.body]
+    const prev = els.map((el) => el.style.backgroundColor)
+    els.forEach((el) => (el.style.backgroundColor = '#FFFFFF'))
+    return () => els.forEach((el, i) => (el.style.backgroundColor = prev[i]))
+  }, [])
+}
+
 export function CreatorFlow3TestPage() {
+  useWhiteDocument()
   const [params] = useSearchParams()
   const version = params.get('version')
   return version === '2' || version === 'v2' ? <CreatorFlow3TestV2 /> : <CreatorFlow3TestV1 />
