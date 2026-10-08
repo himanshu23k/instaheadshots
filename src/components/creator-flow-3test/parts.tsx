@@ -116,43 +116,70 @@ export function VarietyMeter({ photos, compact = false }: { photos: Photo[]; com
 /**
  * The reinforcement under a meter: the user's own photos as avatars (dashed
  * ghosts until the first 3 are in) and a line that changes as they add more.
- * Its arrow points at the fill.
+ * Its arrow points at the fill: up at a meter above it (v1), or down at one
+ * below it (`arrow="bottom"`, v2, which passes the measured `arrowLeft`).
  */
 export function ProgressCaption({
   photos,
   compact = false,
   caption = captionFor(photos.length),
   tone = 'quiet',
+  arrow = 'top',
+  arrowLeft,
+  maxAvatars = 5,
+  avatarSize = 24,
+  textSize,
 }: {
   photos: Photo[]
   compact?: boolean
   caption?: string
   /** `progress` is v2's: a filled box that warms from yellow to green as the count nears 10. */
   tone?: 'quiet' | 'progress'
+  arrow?: 'top' | 'bottom'
+  /** CSS left for the arrow's centre; defaults to the fill's share of the width. */
+  arrowLeft?: string
+  /** v2 keeps the stack to 4 small avatars so the line beside it has room. */
+  maxAvatars?: number
+  avatarSize?: number
+  /** px; defaults to 14 compact, 15 otherwise. */
+  textSize?: number
 }) {
   const n = photos.length
   const c = tone === 'progress' ? progressColors(n) : { bg: K.bubble, stroke: K.bubbleStroke, text: K.variety }
   const fill = pct(n)
-  const avatarCount = n < 6 ? 3 : n < VARIETY_PHOTOS ? 4 : 5
+  const avatarCount = Math.min(maxAvatars, n < 6 ? 3 : n < VARIETY_PHOTOS ? 4 : 5)
   const avatars = Array.from({ length: avatarCount }, (_, i) => photos[i] ?? null)
+  // Each avatar tucks under the last by ~30% of its width.
+  const overlap = Math.round(avatarSize * 0.3)
 
   return (
     <div className="relative">
       <span
         aria-hidden
-        className="absolute -top-1.5 -ml-1.5 size-3 rotate-45 border-t border-l transition-[left,background-color,border-color] duration-300 ease-out"
-        style={{ left: `${Math.max(4, Math.min(96, fill))}%`, background: c.bg, borderColor: c.stroke }}
+        className={cn(
+          'absolute -ml-1.5 size-3 rotate-45 transition-[left,background-color,border-color] duration-300 ease-out',
+          arrow === 'top' ? '-top-1.5 border-t border-l' : '-bottom-1.5 border-r border-b',
+        )}
+        style={{ left: arrowLeft ?? `${Math.max(4, Math.min(96, fill))}%`, background: c.bg, borderColor: c.stroke }}
       />
       <div
-        className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-[background-color,border-color] duration-500"
+        className={cn(
+          'flex items-center rounded-xl border px-3 py-2.5 transition-[background-color,border-color] duration-500',
+          avatarSize < 24 ? 'gap-2' : 'gap-2.5',
+        )}
         style={{ background: c.bg, borderColor: c.stroke }}
       >
         <div className="flex shrink-0 items-center">
           {avatars.map((p, i) => (
             <span
               key={p?.id ?? `ghost-${i}`}
-              className={cn('size-6 overflow-hidden rounded-full', i > 0 && '-ml-[7px]')}
-              style={p ? { boxShadow: `0 0 0 2px ${c.bg}` } : { border: `1.5px dashed ${K.muted}`, background: '#fff' }}
+              className="shrink-0 overflow-hidden rounded-full"
+              style={{
+                width: avatarSize,
+                height: avatarSize,
+                marginLeft: i > 0 ? -overlap : 0,
+                ...(p ? { boxShadow: `0 0 0 2px ${c.bg}` } : { border: `1.5px dashed ${K.muted}`, background: '#fff' }),
+              }}
             >
               {p && <img src={p.url} alt="" className="size-full object-cover" />}
             </span>
@@ -166,8 +193,8 @@ export function ProgressCaption({
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18 }}
             aria-live="polite"
-            className={compact ? 'text-[14px] leading-[18px]' : 'text-[15px] leading-[18px]'}
-            style={{ fontWeight: 450, color: c.text }}
+            className="leading-[18px]"
+            style={{ fontSize: textSize ?? (compact ? 14 : 15), fontWeight: 450, color: c.text }}
           >
             {caption}
           </motion.span>

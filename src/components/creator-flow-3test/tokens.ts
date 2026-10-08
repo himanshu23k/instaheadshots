@@ -44,22 +44,19 @@ export const K2 = {
   bubbleDone: { bg: '#DDF8EE', stroke: '#8FE3C4', text: '#00452F' },
 }
 
-export const CHECKLIST = [
-  'Use photos with different outfits',
-  'Each photo should be at least 512px',
-  'Skip cropping, it lowers the resolution',
-]
-
 /** ?version=2 photo ceiling: 10 is recommended, but people can keep going. */
 export const V2_MAX_PHOTOS = 25
 
-/** Below 10, every line also says how many are left to reach 10. */
+/**
+ * Below 10, every line also says how many are left to reach 10. Each fits one
+ * line in the mobile caption at 375px (13px text beside the avatars, ~229px).
+ */
 const V2_CAPTIONS: Record<number, string> = {
-  0: 'Add 3 photos to start, 10 for the most variety',
-  1: 'Great start! 2 more to create, 9 more to go for 10',
+  0: 'Add 3 photos to start, 10 for variety',
+  1: 'Great start! 2 more to create, 9 for 10',
   2: 'Just 1 more to create, 8 more to go for 10',
-  3: 'You can create, but adding 7 more will give more variety',
-  4: 'Nice! 6 more to go for 10. Try a different outfit',
+  3: 'You can create, but 7 more adds variety',
+  4: 'Nice! 6 more for 10. Try a new outfit',
   5: 'Halfway there, 5 more to go for 10',
   6: 'Great mix! 4 more to go for 10',
   7: 'A new setting helps. 3 more to go for 10',

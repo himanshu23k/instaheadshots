@@ -3,16 +3,18 @@
  *
  * Same rules as v1: 3 to start, 10 for the most variety, and room for more
  * past 10, up to 25. A ten-segment meter replaces v1's track, with v1's
- * caption under it for reinforcement; an add tile leads the grid and a
- * checklist of photo tips sits under it.
+ * caption above it for reinforcement. Before any upload, two quiet example
+ * rows show what 3 photos and 10+ photos get you; after the first, only their
+ * heading stays, above the grid, which an add tile leads.
  *
  * The mocks are mobile only. Desktop keeps v1's split: the QR card on the
- * left, the meter, caption, grid and checklist on the right.
+ * left (its button is the only upload until there are photos), the caption,
+ * meter, grid and examples on the right.
  */
 import { useRef, useState } from 'react'
 import { PrimaryCta } from '@/components/create-profile/CreateProfileFields'
-import { ProgressCaption, QrUploadCard, RequirementsLink, SecureNote, TopBar, UploadToast } from './parts'
-import { Checklist, PhotoPicker, SegmentMeter } from './parts-v2'
+import { QrUploadCard, RequirementsLink, SecureNote, TopBar, UploadToast } from './parts'
+import { PhotoCountExamples, PhotoPicker, ProgressBlock, VarietyHeading } from './parts-v2'
 import { K, V2_MAX_PHOTOS, captionV2 } from './tokens'
 import { MIN_PHOTOS, usePhotos } from './use-photos'
 
@@ -55,8 +57,8 @@ export function CreatorFlow3TestV2() {
   }
 
   const label = creating ? 'Creating Your Headshots…' : 'Create Your Headshots'
-  const picker = (cols: string) => (
-    <PhotoPicker photos={photos} max={MAX} onAdd={pick} onRemove={(id) => !creating && removePhoto(id)} className={cols} />
+  const picker = (cols: string, emptyTile = true) => (
+    <PhotoPicker photos={photos} max={MAX} onAdd={pick} onRemove={(id) => !creating && removePhoto(id)} emptyTile={emptyTile} className={cols} />
   )
 
   return (
@@ -79,12 +81,18 @@ export function CreatorFlow3TestV2() {
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-6 pb-6">
           <div className="mx-auto flex w-full max-w-[480px] flex-col gap-8">
             <Intro />
-            <div className="flex flex-col gap-3">
-              <SegmentMeter count={n} />
-              <ProgressCaption photos={photos} compact caption={captionV2(n)} tone="progress" />
-            </div>
-            {picker('grid-cols-4 gap-2.5')}
-            <Checklist />
+            <ProgressBlock photos={photos} compact caption={captionV2(n)} />
+            {n === 0 ? (
+              <>
+                {picker('grid-cols-4 gap-2.5')}
+                <PhotoCountExamples />
+              </>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <VarietyHeading />
+                {picker('grid-cols-4 gap-2.5')}
+              </div>
+            )}
           </div>
         </div>
 
@@ -118,13 +126,16 @@ export function CreatorFlow3TestV2() {
             </div>
           </section>
 
-          <section className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto p-6">
-            <div className="flex flex-col gap-3">
-              <SegmentMeter count={n} />
-              <ProgressCaption photos={photos} caption={captionV2(n)} tone="progress" />
-            </div>
-            {picker('grid-cols-5 gap-3')}
-            <Checklist />
+          <section className="flex min-w-0 flex-1 flex-col gap-8 overflow-y-auto px-6 pb-6">
+            <ProgressBlock photos={photos} caption={captionV2(n)} />
+            {n === 0 ? (
+              <PhotoCountExamples />
+            ) : (
+              <div className="flex flex-col gap-4">
+                <VarietyHeading />
+                {picker('grid-cols-5 gap-3', false)}
+              </div>
+            )}
           </section>
         </div>
 
